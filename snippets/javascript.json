@@ -1,0 +1,29 @@
+{
+  "graph节点": {
+    "prefix": "graph",
+    "body": ["{", "\tcls: $1", "\tid: $2", "\tnext: ${3:null}", "}"],
+    "description": "graph节点"
+  },
+  "APINode": {
+    "prefix": "APINode",
+    "body": [
+      "export class ${1: Node1} extends APINode {",
+      "",
+      "\turl = ''",
+      "\tmethod = '${2:POST}'",
+      "",
+      "\tasync run() {",
+      "\t}",
+      "",
+      "}"
+    ],
+    "description": "APINode"
+  },
+  "import": {
+    "prefix": "import {",
+    "body": [
+      "import { ${1:APINode} } from 'arkfbp/lib/${2:apiNode}'"
+    ],
+    "description": "import APINode"
+  }
+}

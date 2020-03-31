@@ -1,0 +1,222 @@
+{
+  "name": "arkfbp",
+  "displayName": "arkfbp",
+  "description": "arkfbp - make your programming life easier",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.43.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:arkfbp.explorer.info",
+    "onView:arkfbp.explorer.flow",
+    "onView:arkfbp.explorer.flowOutline",
+    "onCommand:arkfbp.new",
+
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:yaml"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "arkfbp.executeCommand",
+        "title": "Run Script"
+      },
+      {
+        "command": "arkfbp.new",
+        "title": "arkfbp: 新建"
+      },
+      {
+        "command": "arkfbp.build",
+        "title": "编译"
+      },
+      {
+        "command": "arkfbp.views.explorer.action.refresh",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "arkfbp.explorer.flow.action.refresh",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "arkfbp.explorer.flow.action.create",
+        "title": "Create",
+        "icon": {
+          "light": "resources/light/edit.svg",
+          "dark": "resources/dark/edit.svg"
+        }
+      },
+      {
+        "command": "arkfbp.explorer.flow.action.run",
+        "title": "Run",
+        "icon": {
+          "light": "resources/light/start.png",
+          "dark": "resources/dark/start.png"
+        }
+      },
+
+      {
+        "command": "arkfbp.explorer.flowOutline.action.refresh",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+
+      {
+        "command": "arkfbp.welcome",
+        "title": "Arkfbp",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "arkfbp.build",
+        "title": "编译",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "arkfbp.package.run",
+        "title": "运行",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "arkfbp.package.test",
+        "title": "测试",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "arkfbp.package.deploy",
+        "title": "部署",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      }
+    ],
+    "snippets": [
+      {
+        "language": "javascript",
+        "path": "./snippets/javascript.json"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "arkfbp.explorer.info",
+          "name": "ArkFBP Property",
+          "group": "navigation@1"
+        },
+        {
+          "id": "arkfbp.explorer.flow",
+          "name": "ArkFBP Flows",
+          "group": "navigation@2"
+        },
+        {
+          "id": "arkfbp.explorer.flowOutline",
+          "name": "ArkFBP Flow Outline",
+          "group": "navigation@3"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "arkfbp.explorer.flow.action.refresh",
+          "when": "view == arkfbp.explorer.flow",
+          "group": "navigation"
+        },
+        {
+          "command": "arkfbp.explorer.flow.action.create",
+          "when": "view == arkfbp.explorer.flow",
+          "group": "navigation"
+        },
+
+        {
+          "command": "arkfbp.explorer.flowOutline.action.refresh",
+          "when": "view == arkfbp.explorer.flowOutline",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "arkfbp.explorer.flow.action.run",
+          "when": "view == arkfbp.explorer.flow",
+          "group": "inline"
+        }
+      ],
+      "touchBar": [
+        {
+          "command": "arkfbp.welcome",
+          "group": "navigation@+1"
+        },
+        {
+          "command": "arkfbp.build",
+          "group": "navigation@+2"
+        },
+        {
+          "command": "arkfbp.package.run",
+          "group": "navigation@+3"
+        },
+        {
+          "command": "arkfbp.package.test",
+          "group": "navigation@+4"
+        },
+        {
+          "command": "arkfbp.package.deploy",
+          "group": "navigation@+5"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.1",
+    "@types/js-yaml": "^3.12.3",
+    "@types/mocha": "^7.0.1",
+    "@types/node": "^12.11.7",
+    "@types/vscode": "^1.43.0",
+    "@typescript-eslint/eslint-plugin": "^2.18.0",
+    "@typescript-eslint/parser": "^2.18.0",
+    "eslint": "^6.8.0",
+    "glob": "^7.1.6",
+    "jsonc-parser": "^0.4.2",
+    "mocha": "^7.0.1",
+    "typescript": "^3.7.5",
+    "vscode-test": "^1.3.0"
+  },
+  "dependencies": {
+    "js-yaml": "^3.13.1",
+    "run-in-terminal": "0.0.3"
+  }
+}
