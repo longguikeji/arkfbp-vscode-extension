@@ -19,7 +19,7 @@ import { runCommandInIntegratedTerminal } from './util';
 import { showQuickPick, showCreateFlowBox } from './basicInput';
 import { COMMAND_REFRESH, FlowOutlineProvider, COMMAND_SELECTION, posToLine } from './flowOutline';
 
-import { isArkFBPApp, isArkFBPAppByDocument } from './arkfbp';
+import { isArkFBPApp, isArkFBPAppByDocument, getArkFBPFlowDirByDocument } from './arkfbp';
 
 import {
 	window, commands, workspace, languages, OutputChannel, ExtensionContext, ViewColumn,
@@ -30,6 +30,8 @@ import {
 import { O_SYMLINK } from 'constants';
 import { resolve } from 'dns';
 import { FlowTreeItem } from './FlowTreeItem';
+
+import { GraphPreviewPanel } from './graph';
 
 // // this method is called when your extension is activated
 // // your extension is activated the very first time the command is executed
@@ -140,6 +142,13 @@ export async function activate(context: ExtensionContext) {
 		rootPath
 	);
 	vscode.window.registerTreeDataProvider("arkfbp.explorer.info", nodeProvider);
+	context.subscriptions.push(
+		vscode.commands.registerCommand("arkfbp.explorer.info.action.build", () => {
+			const cmd = 'npm';
+			const args = ['run', 'compile'];
+			runCommandInIntegratedTerminal(terminal, cmd, args, this.workspaceRoot);
+		})
+	);
 
 	const flowProvider: FlowsProvider = new FlowsProvider(
 		rootPath,
@@ -176,6 +185,25 @@ export async function activate(context: ExtensionContext) {
 					vscode.TextEditorRevealType.InCenterIfOutsideViewport
 				);
 				editor.show();
+			}
+		})
+	);
+
+
+	/**
+	 * Preview the Graph
+	 */
+	context.subscriptions.push(
+		vscode.commands.registerCommand('arkfbp.graph.preview', () => {
+			const editor = vscode.window.activeTextEditor;
+			if (!editor) {
+				return;
+			}
+
+			const flowDir = getArkFBPFlowDirByDocument(editor.document);
+			console.info(flowDir);
+			if (flowDir !== '') {
+				GraphPreviewPanel.createOrShow(context.extensionPath, path.join(flowDir, 'index.js'));
 			}
 		})
 	);

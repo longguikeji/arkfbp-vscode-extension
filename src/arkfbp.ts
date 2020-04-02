@@ -1,8 +1,10 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import * as vscode from 'vscode';
 
 import { workspace, TextDocument } from 'vscode';
 import { isSwitchStatement } from 'typescript';
+import * as ts from 'typescript';
 
 const ARKFBP_META_DIR = '.arkfbp';
 const ARKFBP_META_CONFIG_FILE = 'config.yaml';
@@ -42,7 +44,12 @@ export function getArkFBPAppDir(): string {
     return folders[0].uri.fsPath;
 }
 
-export function getArkFBPFlowDir(root: string): string {
+/**
+ * Get the root flow dir inside the ArkFBP app
+ *
+ * @param root: string
+ */
+export function getArkFBPFlowRootDir(root: string): string {
     return path.join(root, "src", ARKFBP_FLOW_DIR);
 }
 
@@ -80,4 +87,209 @@ export function isArkFBPFlow(root: string): boolean {
     } catch (err) {
         return false;
     }
+}
+
+/**
+ *
+ * @param root
+ */
+export function getArkFBPFlowDirByDocument(document: TextDocument): string {
+
+    console.info('getArkFBPFlowDirByDocument:', document.uri.fsPath);
+
+    const dirname = path.dirname(document.uri.fsPath);
+    if (isArkFBPFlow(dirname)) {
+        return dirname;
+    }
+
+    return '';
+}
+
+export interface GraphNode {
+    indexs?: number[];
+    kind?: ts.SyntaxKind;
+    pos?: number;
+    end?: number;
+    node?: any;
+    isDirectory?: boolean;
+
+    cls?: string;
+    id?: string;
+    next?: string;
+    name?: string;
+    base?: string;
+}
+
+export function syntaxKindToName(kind: ts.SyntaxKind) {
+    return ts.SyntaxKind[kind];
+}
+
+export function getNodes(node: ts.Node) {
+    const nodes: ts.Node[] = [];
+    ts.forEachChild(node, cbNode => {
+        nodes.push(cbNode);
+    });
+    return nodes;
+}
+
+export function getXChildren(sfile: ts.Node, parent: GraphNode): GraphNode[] {
+    const childNodes = parent.indexs.reduce((childs, index) => {
+        return getNodes(childs[index]);
+    }, getNodes(sfile));
+
+    return childNodes.map((node, index) => {
+        return {
+            indexs: parent.indexs.concat([index]),
+            kind: node.kind,
+            pos: node.pos,
+            end: node.end,
+            node: node,
+            isDirectory: getNodes(node).length > 0,
+        };
+    });
+}
+
+export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
+    const content = fs.readFileSync(graphFilePath).toString();
+
+    const sfile = ts.createSourceFile(
+        graphFilePath,
+        content,
+        ts.ScriptTarget.Latest
+    );
+
+    const nodes: GraphNode[] = getNodes(sfile).map((node: ts.Node, index: number) => {
+        return {
+            indexs: [index],
+            kind: node.kind,
+            pos: node.pos,
+            end: node.end,
+            node: node,
+            isDirectory: getNodes(node).length > 0,
+        };
+    }).filter((node: GraphNode) => {
+        if (syntaxKindToName(node.kind) === 'ClassDeclaration') {
+            return true;
+        }
+
+        return false;
+    });
+
+    if (nodes.length === 0) {
+        return [];
+    }
+
+    // Flow Class Definition
+    const cls = nodes[0];
+
+    let methods = getXChildren(sfile, cls).filter((node: GraphNode) => {
+        if (syntaxKindToName(node.kind) !== 'MethodDeclaration') {
+            return false;
+        }
+
+        if (node.node && node.node.name && node.node.name.escapedText !== 'createNodes') {
+            return false;
+        }
+
+        return true;
+    });
+
+    // Get `createNodes` Func
+    if (methods.length === 0) {
+        return [];
+    }
+
+    const createNodesFunc = methods[0];
+    const ret = getXChildren(sfile, createNodesFunc);
+
+    const returnStatement = ret[1].node.statements[0];
+    const elements = returnStatement.expression.elements;
+    const flowNodes = elements.map((element) => {
+        const p: GraphNode = {
+            pos: element.pos,
+            end: element.end,
+        };
+
+        for (let i = 0; i < element.properties.length; ++i) {
+            const prop = element.properties[i];
+            if (prop.name.escapedText === 'cls') {
+                p['cls'] = prop.initializer.escapedText;
+            }
+            if (prop.name.escapedText === 'id') {
+                p['id'] = prop.initializer.text;
+            }
+            if (prop.name.escapedText === 'next') {
+                p['next'] = prop.initializer.text;
+            }
+        }
+
+        return p;
+    });
+
+    return flowNodes;
+}
+
+export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode {
+    console.info('>>>getArkFBPGraphNodeFromFile', filePath);
+    const content = fs.readFileSync(filePath).toString();
+    const sfile = ts.createSourceFile(
+        filePath,
+        content,
+        ts.ScriptTarget.Latest
+    );
+
+    const nodes: GraphNode[] = getNodes(sfile).map((node: ts.Node, index: number) => {
+        return {
+            indexs: [index],
+            kind: node.kind,
+            pos: node.pos,
+            end: node.end,
+            node: node,
+            isDirectory: getNodes(node).length > 0,
+
+            cls: '',
+            id: '',
+            next:'',
+            name: '',
+            base: '',
+        };
+    }).filter((node: GraphNode) => {
+        if (syntaxKindToName(node.kind) === 'ClassDeclaration') {
+            return true;
+        }
+
+        return false;
+    });
+
+    if (nodes.length === 0) {
+        return null;
+    }
+
+    const node = nodes[0];
+    const nodeName = node.node.name.escapedText;
+    const baseNode = node.node.heritageClauses[0].types[0].expression.escapedText;
+    const p: GraphNode = {};
+    p.base = baseNode;
+    p.name = nodeName;
+    return p;
+}
+
+
+/**
+ * Get all nodes defined in the flow directory
+ *
+ * @param flowDirPath: flow directory path
+ */
+export function getArkFBPFlowGraphNodes(flowDirPath: string): GraphNode[] {
+    const elements = fs.readdirSync(path.join(flowDirPath, 'nodes'));
+
+    const graphNodes: GraphNode[] = [];
+
+    for (var i = 0; i < elements.length; ++i) {
+        const element = elements[i];
+        const graphNode = getArkFBPGraphNodeFromFile(path.join(flowDirPath, 'nodes', element));
+        graphNodes.push(graphNode);
+    }
+
+    return graphNodes;
 }

@@ -83,7 +83,6 @@ export class AstModel {
     });
   }
 
-
   public getChildren(parent: AstNode): AstNode[] {
     let methods = this.getXChildren(parent);
     methods = methods.filter((node: AstNode) => {

@@ -18,7 +18,7 @@ import { ScriptEventEmitter, MaybeScript } from "./types";
 import { FlowDirTreeItem } from "./FlowDirTreeItem";
 
 import { runCommandInIntegratedTerminal } from './util';
-import { getArkFBPFlowDir, getArkFBPFlows, getArkFBPAppDir } from './arkfbp';
+import { getArkFBPFlowRootDir, getArkFBPFlows, getArkFBPAppDir } from './arkfbp';
 
 
 export class FlowsProvider
@@ -94,7 +94,7 @@ export class FlowsProvider
     rootPath?: string
   ): void {
     if (!rootPath) {
-      rootPath = getArkFBPFlowDir(this.workspaceRoot);
+      rootPath = getArkFBPFlowRootDir(this.workspaceRoot);
     }
 
     if (this.pathExists(rootPath)) {
@@ -123,7 +123,7 @@ export class FlowsProvider
     flows.forEach(element => {
       if (typeof element === 'string') {
         const cmd = element as string;
-        const r = getArkFBPFlowDir(getArkFBPAppDir());
+        const r = getArkFBPFlowRootDir(getArkFBPAppDir());
         const x = flowsRootPath.slice(r.length + 1);
         treeItems.push(
           new FlowTreeItem(
