@@ -13,9 +13,9 @@ import {
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { FlowTreeItem } from "./FlowTreeItem";
+import { FlowTreeItem } from "./flowTreeItem";
 import { ScriptEventEmitter, MaybeScript } from "./types";
-import { FlowDirTreeItem } from "./FlowDirTreeItem";
+import { FlowDirTreeItem } from "./flowDirTreeItem";
 
 import { runCommandInIntegratedTerminal } from './util';
 import { getArkFBPFlowRootDir, getArkFBPFlows, getArkFBPAppDir } from './arkfbp';
@@ -28,7 +28,7 @@ export class FlowsProvider
     ._onDidChangeTreeData.event;
   private fileWatcher: FileSystemWatcher;
 
-  constructor(private readonly workspaceRoot: string, private readonly terminal: Terminal) {
+  constructor(private readonly context: vscode.ExtensionContext, private readonly workspaceRoot: string, private readonly terminal: Terminal) {
     workspace.workspaceFolders.forEach(folder => {
       // const pattern: string = getPackageJson(folder.uri.path);
       // this.fileWatcher = workspace.createFileSystemWatcher(pattern);
@@ -41,7 +41,9 @@ export class FlowsProvider
   }
 
   create(): void {
-    vscode.commands.executeCommand('arkfbp.new').then(() => this.refresh());
+    vscode.commands.executeCommand('arkfbp.createFlow').then(() => {
+      this.refresh();
+    });
   }
 
   run(item: FlowTreeItem): void {
@@ -57,7 +59,7 @@ export class FlowsProvider
 
   getChildren(
     element?: FlowTreeItem | FlowDirTreeItem
-  ): Thenable<(FlowTreeItem|FlowDirTreeItem)[]> {
+  ): Thenable<(FlowTreeItem | FlowDirTreeItem)[]> {
     return new Promise((resolve: Function) => {
       const folders: any = workspace.workspaceFolders;
       if (element) {
@@ -116,8 +118,8 @@ export class FlowsProvider
   */
   private mkTreeItemsFromPackageScripts(
     flowsRootPath: string
-  ): (FlowTreeItem|FlowDirTreeItem)[] {
-    const treeItems: (FlowTreeItem|FlowDirTreeItem)[] = [];
+  ): (FlowTreeItem | FlowDirTreeItem)[] {
+    const treeItems: (FlowTreeItem | FlowDirTreeItem)[] = [];
     const flows = getArkFBPFlows(flowsRootPath, true);
 
     flows.forEach(element => {
@@ -125,28 +127,58 @@ export class FlowsProvider
         const cmd = element as string;
         const r = getArkFBPFlowRootDir(getArkFBPAppDir());
         const x = flowsRootPath.slice(r.length + 1);
-        treeItems.push(
-          new FlowTreeItem(
-            cmd,
-            flowsRootPath,
-            TreeItemCollapsibleState.None,
-            cmd,
-            {
-              title: "Run Flow",
-              command: "arkfbp.explorer.flow.action.run",
-              arguments: [x.length > 0 ? x + '/' + cmd : cmd, flowsRootPath]
-            }
-          )
+
+        const item = new FlowTreeItem(
+          `${cmd}`,
+          flowsRootPath,
+          TreeItemCollapsibleState.None,
+          cmd,
+          {
+            title: "Run Flow",
+            command: "arkfbp.explorer.flow.action.run",
+            arguments: [x.length > 0 ? x + '/' + cmd : cmd, flowsRootPath]
+          }
         );
+
+        item.iconPath = {
+          light: path.join(
+            this.context.extensionPath,
+            "resources",
+            "light",
+            "file_type_npm.svg"
+          ),
+          dark: path.join(
+            this.context.extensionPath,
+            "resources",
+            "dark",
+            "file_type_npm.svg"
+          )
+        };
+        treeItems.push(item);
       } else {
-        treeItems.push(
-          new FlowDirTreeItem(
-            element[0],
-            flowsRootPath,
-            TreeItemCollapsibleState.Collapsed,
-            null,
-          )
+        const item = new FlowDirTreeItem(
+          element[0],
+          flowsRootPath,
+          TreeItemCollapsibleState.Collapsed,
+          null,
         );
+
+        item.iconPath = {
+          light: path.join(
+            this.context.extensionPath,
+            "resources",
+            "light",
+            "folder.svg"
+          ),
+          dark: path.join(
+            this.context.extensionPath,
+            "resources",
+            "dark",
+            "folder.svg"
+          )
+        };
+
+        treeItems.push(item);
       }
 
     });

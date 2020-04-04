@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as path from 'path';
@@ -8,15 +6,16 @@ import { ThrottledDelayer } from './async';
 import * as yaml from 'js-yaml';
 import { ITerminalMap } from "./types";
 
-import { NpmScriptsNodeProvider } from "./info";
+import { AppProvider } from "./info";
 
 import * as ts from 'typescript';
-
 
 import { FlowsProvider } from "./flowExplorer";
 import { runCommandInIntegratedTerminal } from './util';
 
-import { showQuickPick, showCreateFlowBox } from './basicInput';
+import { showCreateFlowBox } from './createFlowBox';
+import { showCreateFlowNodeBox } from './createFlowNodeBox';
+
 import { COMMAND_REFRESH, FlowOutlineProvider, COMMAND_SELECTION, posToLine } from './flowOutline';
 
 import { isArkFBPApp, isArkFBPAppByDocument, getArkFBPFlowDirByDocument } from './arkfbp';
@@ -29,43 +28,11 @@ import {
 
 import { O_SYMLINK } from 'constants';
 import { resolve } from 'dns';
-import { FlowTreeItem } from './FlowTreeItem';
+import { FlowTreeItem } from './flowTreeItem';
 
 import { GraphPreviewPanel } from './graph';
+import { registerStatusBarItem } from './statusBar';
 
-// // this method is called when your extension is activated
-// // your extension is activated the very first time the command is executed
-// export function activate(context: vscode.ExtensionContext) {
-
-// 	// The command has been defined in the package.json file
-// 	// Now provide the implementation of the command with registerCommand
-// 	// The commandId parameter must match the command field in package.json
-// 	context.subscriptions.push(
-// 		vscode.commands.registerCommand('arkfbp.new', () => {
-// 			// The code you place here will be executed every time your command is executed
-// 			const options: { [key: string]: (context: ExtensionContext) => Promise<void> } = {
-// 				'新建工作流': showCreateFlowBox,
-// 				'新建节点': showQuickPick,
-// 			};
-
-// 			const quickPick = window.createQuickPick();
-// 			quickPick.items = Object.keys(options).map(label => ({ label: label }));
-// 			quickPick.onDidChangeSelection(selection => {
-// 				if (selection[0]) {
-// 					options[selection[0].label](context)
-// 						.catch(console.error);
-// 				}
-// 			});
-// 			quickPick.onDidHide(() => quickPick.dispose());
-// 			quickPick.show();
-
-// 			//vscode.window.showInformationMessage('Hello World again!');
-// 		})
-// 	);
-
-// }
-
-// this method is called when your extension is deactivated
 export function deactivate() {
 	if (terminal) {
 		terminal.dispose();
@@ -73,12 +40,7 @@ export function deactivate() {
 }
 
 let terminal: Terminal | null = null;
-let myStatusBarItem: vscode.StatusBarItem;
 
-function updateStatusBarItem(): void {
-	myStatusBarItem.text = `ArkFBP`;
-	myStatusBarItem.show();
-}
 
 export async function activate(context: ExtensionContext) {
 	if (!terminal) {
@@ -92,13 +54,7 @@ export async function activate(context: ExtensionContext) {
 	});
 
 	// StatusBar
-	myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-	myStatusBarItem.command = 'arkfbp.welcome';
-	context.subscriptions.push(myStatusBarItem);
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updateStatusBarItem));
-	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(updateStatusBarItem));
-	updateStatusBarItem();
-
+	registerStatusBarItem(context);
 
 	//workspace.onDidChangeConfiguration(_event => loadConfiguration(context), null, context.subscriptions);
 	//loadConfiguration(context);
@@ -110,24 +66,16 @@ export async function activate(context: ExtensionContext) {
 		window.showInformationMessage('Welcome to use ArkFBP');
 	});
 
-	// New Command
+	// Create Flow Command
 	context.subscriptions.push(
-		vscode.commands.registerCommand('arkfbp.new', () => {
-			const options: { [key: string]: (context: ExtensionContext) => Promise<void> } = {
-				'新建工作流': showCreateFlowBox,
-				'新建节点': showQuickPick,
-			};
+		vscode.commands.registerCommand('arkfbp.createFlow', async () => {
+			await showCreateFlowBox();
+		})
+	);
 
-			const quickPick = window.createQuickPick();
-			quickPick.items = Object.keys(options).map(label => ({ label: label }));
-			quickPick.onDidChangeSelection(selection => {
-				if (selection[0]) {
-					options[selection[0].label](context)
-						.catch(console.error);
-				}
-			});
-			quickPick.onDidHide(() => quickPick.dispose());
-			quickPick.show();
+	context.subscriptions.push(
+		vscode.commands.registerCommand('arkfbp.createFlowNode', async () => {
+			await showCreateFlowNodeBox();
 		})
 	);
 
@@ -138,7 +86,8 @@ export async function activate(context: ExtensionContext) {
 		runCommandInIntegratedTerminal(terminal, cmd, args, this.workspaceRoot);
 	});
 
-	const nodeProvider: NpmScriptsNodeProvider = new NpmScriptsNodeProvider(
+	const nodeProvider: AppProvider = new AppProvider(
+		context,
 		rootPath
 	);
 	vscode.window.registerTreeDataProvider("arkfbp.explorer.info", nodeProvider);
@@ -151,6 +100,7 @@ export async function activate(context: ExtensionContext) {
 	);
 
 	const flowProvider: FlowsProvider = new FlowsProvider(
+		context,
 		rootPath,
 		terminal,
 	);
@@ -161,6 +111,19 @@ export async function activate(context: ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.create", () => flowProvider.create())
 	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand("arkfbp.explorer.flow.action.sdelete", async (item: FlowTreeItem) => {
+			const result = await vscode.window.showWarningMessage('确认删除该工作流么? \n该操作不可逆', {
+				modal: true,
+			}, 'OK');
+
+			console.info(item);
+
+			if (typeof result !== 'undefined') {
+			}
+		})
+	);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.run", (item: FlowTreeItem) => flowProvider.run(item))
 	);
@@ -170,7 +133,12 @@ export async function activate(context: ExtensionContext) {
 		treeDataProvider: flowOutlineDataProvider,
 	});
 	context.subscriptions.push(
-		vscode.commands.registerCommand("COMMAND_REFRESH", () => flowOutlineDataProvider.refresh())
+		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.createFlowNode', () => {
+			vscode.commands.executeCommand('arkfbp.createFlowNode').then(() => flowOutlineDataProvider.refresh());
+		})
+	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand(COMMAND_REFRESH, () => flowOutlineDataProvider.refresh())
 	);
 	context.subscriptions.push(
 		vscode.commands.registerCommand(COMMAND_SELECTION, (pos, end) => {
@@ -189,6 +157,23 @@ export async function activate(context: ExtensionContext) {
 		})
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.deleteFlowNode', async (item) => {
+			console.info('>>>', item);
+			const result = await vscode.window.showWarningMessage('确认删除该节点么? \n该操作不可逆', {
+				modal: true,
+			}, 'OK');
+
+			if (typeof result !== 'undefined') {
+				// try to delete the node file
+				if (typeof item.id !== 'undefined') {
+					vscode.window.showInformationMessage(`The flow node ${item.cls} with id: ${item.id} deleted`);
+				} else {
+					vscode.window.showInformationMessage(`The flow node ${item.cls} with no id deleted`);
+				}
+			}
+		})
+	);
 
 	/**
 	 * Preview the Graph

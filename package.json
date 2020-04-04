@@ -6,6 +6,7 @@
   "engines": {
     "vscode": "^1.43.0"
   },
+  "publisher": "longguikeji",
   "categories": [
     "Other"
   ],
@@ -13,13 +14,11 @@
     "onView:arkfbp.explorer.info",
     "onView:arkfbp.explorer.flow",
     "onView:arkfbp.explorer.flowOutline",
-    "onCommand:arkfbp.new",
-
     "onLanguage:javascript",
     "onLanguage:typescript",
     "onLanguage:yaml"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
@@ -27,8 +26,12 @@
         "title": "arkfbp: 预览流程图"
       },
       {
-        "command": "arkfbp.new",
-        "title": "arkfbp: 新建"
+        "command": "arkfbp.createFlow",
+        "title": "arkfbp: 新建工作流"
+      },
+      {
+        "command": "arkfbp.createFlowNode",
+        "title": "arkfbp: 新建工作流节点"
       },
       {
         "command": "arkfbp.views.explorer.action.refresh",
@@ -56,13 +59,28 @@
       },
       {
         "command": "arkfbp.explorer.flow.action.run",
-        "title": "Run",
+        "title": "Run the Flow",
         "icon": {
           "light": "resources/light/start.png",
           "dark": "resources/dark/start.png"
         }
       },
-
+      {
+        "command": "arkfbp.explorer.flow.action.delete",
+        "title": "Delete the Flow",
+        "icon": {
+          "light": "resources/light/edit.svg",
+          "dark": "resources/dark/edit.svg"
+        }
+      },
+      {
+        "command": "arkfbp.explorer.flowOutline.action.createFlowNode",
+        "title": "CreateFlowNode",
+        "icon": {
+          "light": "resources/light/edit.svg",
+          "dark": "resources/dark/edit.svg"
+        }
+      },
       {
         "command": "arkfbp.explorer.flowOutline.action.refresh",
         "title": "Refresh",
@@ -71,7 +89,14 @@
           "dark": "resources/dark/refresh.svg"
         }
       },
-
+      {
+        "command": "arkfbp.explorer.flowOutline.action.deleteFlowNode",
+        "title": "Delete",
+        "icon": {
+          "light": "resources/light/edit.svg",
+          "dark": "resources/dark/edit.svg"
+        }
+      },
       {
         "command": "arkfbp.welcome",
         "title": "Arkfbp",
@@ -128,20 +153,20 @@
       }
     ],
     "views": {
-      "explorer": [
+      "arkfbp": [
         {
           "id": "arkfbp.explorer.info",
-          "name": "ArkFBP Property",
+          "name": "App",
           "group": "navigation@1"
         },
         {
           "id": "arkfbp.explorer.flow",
-          "name": "ArkFBP Flows",
+          "name": "Flows",
           "group": "navigation@2"
         },
         {
           "id": "arkfbp.explorer.flowOutline",
-          "name": "ArkFBP Flow Outline",
+          "name": "Outline",
           "group": "navigation@3"
         }
       ]
@@ -158,13 +183,16 @@
           "when": "view == arkfbp.explorer.flow",
           "group": "navigation"
         },
-
         {
           "command": "arkfbp.explorer.info.action.build",
           "when": "view == arkfbp.explorer.info",
           "group": "navigation"
         },
-
+        {
+          "command": "arkfbp.explorer.flowOutline.action.createFlowNode",
+          "when": "view == arkfbp.explorer.flowOutline",
+          "group": "navigation"
+        },
         {
           "command": "arkfbp.explorer.flowOutline.action.refresh",
           "when": "view == arkfbp.explorer.flowOutline",
@@ -174,12 +202,19 @@
       "view/item/context": [
         {
           "command": "arkfbp.explorer.flow.action.run",
-          "when": "view == arkfbp.explorer.flow",
-          "group": "inline"
+          "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
+          "group": "inline@1"
         },
+
         {
-          "command": "arkfbp.explorer.info.action.build",
-          "when": "view == arkfbp.explorer.info",
+          "command": "arkfbp.explorer.flow.action.delete",
+          "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
+          "group": "inline@2"
+        },
+
+        {
+          "command": "arkfbp.explorer.flowOutline.action.deleteFlowNode",
+          "when": "view == arkfbp.explorer.flowOutline",
           "group": "inline"
         }
       ],
@@ -193,15 +228,27 @@
           "group": "navigation@+2"
         }
       ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "arkfbp",
+          "title": "ArkFBP",
+          "icon": "resources/dark/activitybar.svg"
+        }
+      ]
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "vscode:prepublish": "webpack --mode production",
+    "webpack": "webpack --mode development",
+    "webpack-dev": "webpack --watch",
+    "test-compile": "tsc -p ./"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
@@ -215,8 +262,11 @@
     "glob": "^7.1.6",
     "jsonc-parser": "^0.4.2",
     "mocha": "^7.0.1",
+    "ts-loader": "^6.2.2",
     "typescript": "^3.7.5",
-    "vscode-test": "^1.3.0"
+    "vscode-test": "^1.3.0",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^4.0.0-beta.2"
   },
   "dependencies": {
     "js-yaml": "^3.13.1",

@@ -1,5 +1,5 @@
 import { Terminal, EventEmitter } from "vscode";
-import { FlowTreeItem } from "./FlowTreeItem";
+import { FlowTreeItem } from "./flowTreeItem";
 
 export type ITerminalMap = Map<string, Terminal>;
 

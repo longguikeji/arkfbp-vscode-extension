@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 import * as ts from 'typescript';
+import * as path from 'path';
+import * as fs from 'fs';
+import { getArkFBPFlowDirByDocument } from './arkfbp';
 
 export const COMMAND_SELECTION = 'arkfbp.explorer.flowOutline.action.selection';
 export const COMMAND_REFRESH = 'arkfbp.explorer.flowOutline.action.refresh';
@@ -36,11 +39,17 @@ export class AstModel {
   private _getAst() {
     const editor = vscode.window.activeTextEditor;
     if (editor !== undefined) {
-      this.sfile = ts.createSourceFile(
-        editor.document.uri.toString(),
-        editor.document.getText(),
-        ts.ScriptTarget.Latest
-      );
+      const flowDirPath = getArkFBPFlowDirByDocument(editor.document);
+      if (flowDirPath !== '') {
+        const content = fs.readFileSync(path.join(flowDirPath, 'index.js')).toString();
+        this.sfile = ts.createSourceFile(
+          path.join(flowDirPath, 'index.js'),
+          content,
+          ts.ScriptTarget.Latest
+        );
+      } else {
+        this.sfile = ts.createSourceFile('ast.ts', ``, ts.ScriptTarget.Latest);
+      }
     }
   }
 
@@ -144,24 +153,47 @@ export class FlowOutlineProvider implements vscode.TreeDataProvider<AstNode> {
   public getTreeItem(element: AstNode): vscode.TreeItem {
     let label: string;
     if (element['cls']) {
-      label = `#${element['id']} [${element['cls']}]`;
+      label = `[#${element['id']}] ${element['cls']}`;
     } else {
       label = 'Graph';
     }
 
-    return {
-      label: `${label}`,
-      collapsibleState: element.isDirectory ? vscode.TreeItemCollapsibleState.Collapsed : void 0,
-      command: {
-        title: '',
-        command: COMMAND_SELECTION,
-        arguments: [element.pos, element.end],
-      }
+    const item = new vscode.TreeItem(`${label}`);
+    item.collapsibleState = element.isDirectory ? vscode.TreeItemCollapsibleState.Collapsed : void 0;
+    item.command = {
+      title: '',
+      command: COMMAND_SELECTION,
+      arguments: [element.pos, element.end],
     };
+
+    item.iconPath = {
+      light: path.join(
+        this.context.extensionPath,
+        "resources",
+        "light",
+        "string.svg"
+      ),
+      dark: path.join(
+        this.context.extensionPath,
+        "resources",
+        "dark",
+        "string.svg"
+      )
+    };
+
+    return item;
   }
 
   public getChildren(element?: AstNode): AstNode[] | Thenable<AstNode[]> {
-    return element ? this.model.getChildren(element) : this.model.roots;
+    if (element) {
+      return this.model.getChildren(element);
+    } else {
+      if (this.model.roots.length) {
+        return this.model.getChildren(this.model.roots[0]);
+      } else {
+        return [];
+      }
+    }
   }
 
   public didChange() {

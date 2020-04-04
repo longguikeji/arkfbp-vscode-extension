@@ -94,15 +94,21 @@ export function isArkFBPFlow(root: string): boolean {
  * @param root
  */
 export function getArkFBPFlowDirByDocument(document: TextDocument): string {
-
     console.info('getArkFBPFlowDirByDocument:', document.uri.fsPath);
+    const flowRootDir = getArkFBPFlowRootDir(workspace.rootPath);
+    let dirname = path.dirname(document.uri.fsPath);
+    let flowDir: string = '';
 
-    const dirname = path.dirname(document.uri.fsPath);
-    if (isArkFBPFlow(dirname)) {
-        return dirname;
+    while (dirname.indexOf(flowRootDir) >= 0) {
+        if (isArkFBPFlow(dirname)) {
+            flowDir = dirname;
+            break;
+        }
+
+        dirname = path.dirname(dirname);
     }
 
-    return '';
+    return flowDir;
 }
 
 export interface GraphNode {

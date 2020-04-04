@@ -24,14 +24,12 @@ import {
         __filename,
         "..",
         "..",
-        "..",
         "resources",
         "light",
         "file_type_npm.svg"
       ),
       dark: pathJoin(
         __filename,
-        "..",
         "..",
         "..",
         "resources",

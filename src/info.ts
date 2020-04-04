@@ -11,23 +11,23 @@ import {
   import * as vscode from "vscode";
   import * as fs from "fs";
   import * as path from "path";
-  import { FlowTreeItem } from "./FlowTreeItem";
+  import { FlowTreeItem } from "./flowTreeItem";
   import { ScriptEventEmitter, MaybeScript } from "./types";
-  import { FlowDirTreeItem } from "./FlowDirTreeItem";
+  import { FlowDirTreeItem } from "./flowDirTreeItem";
   import * as yaml from 'js-yaml';
 
   function getPackageJson(root: string): string {
     return path.join(root, ".arkfbp", "config.yml");
   }
 
-  export class NpmScriptsNodeProvider
+  export class AppProvider
     implements TreeDataProvider<FlowTreeItem | FlowDirTreeItem> {
     private readonly _onDidChangeTreeData: ScriptEventEmitter = new EventEmitter();
     public readonly onDidChangeTreeData: Event<MaybeScript> = this
       ._onDidChangeTreeData.event;
     private fileWatcher: FileSystemWatcher;
 
-    constructor(private readonly workspaceRoot: string) {
+    constructor(private readonly context:vscode.ExtensionContext, private readonly workspaceRoot: string) {
       workspace.workspaceFolders.forEach(folder => {
         const pattern: string = getPackageJson(folder.uri.path);
         this.fileWatcher = workspace.createFileSystemWatcher(pattern);
@@ -157,13 +157,30 @@ import {
           arguments: [scriptName, workspaceDir]
         };
 
-        return new FlowTreeItem(
+        const item = new FlowTreeItem(
           scriptName,
           '',
           TreeItemCollapsibleState.None,
           scriptCommand,
           cmdObject
         );
+
+        item.iconPath = item.iconPath = {
+          light: path.join(
+            this.context.extensionPath,
+            "resources",
+            "light",
+            "string.svg"
+          ),
+          dark: path.join(
+            this.context.extensionPath,
+            "resources",
+            "dark",
+            "string.svg"
+          )
+        };
+
+        return item;
       };
 
       if (doc) {
