@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as rimraf  from 'rimraf';
 import { ThrottledDelayer } from './async';
 import * as yaml from 'js-yaml';
 import { ITerminalMap } from "./types";
@@ -113,7 +114,7 @@ export async function activate(context: ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("arkfbp.explorer.flow.action.sdelete", async (item: FlowTreeItem) => {
+		vscode.commands.registerCommand("arkfbp.explorer.flow.action.delete", async (item: FlowTreeItem) => {
 			const result = await vscode.window.showWarningMessage('确认删除该工作流么? \n该操作不可逆', {
 				modal: true,
 			}, 'OK');
@@ -121,6 +122,10 @@ export async function activate(context: ExtensionContext) {
 			console.info(item);
 
 			if (typeof result !== 'undefined') {
+				const flowDir = path.join(item.dir, item.label);
+				console.info(flowDir);
+				rimraf.sync(flowDir);
+				flowProvider.refresh();
 			}
 		})
 	);

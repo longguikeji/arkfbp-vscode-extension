@@ -2,41 +2,79 @@
 
 'use strict';
 
+/* eslint-disable @typescript-eslint/no-var-requires */
+const fs = require('fs');
 const path = require('path');
+const glob = require('glob');
 
-/**@type {import('webpack').Configuration}*/
-const config = {
-  target: 'node', // vscode extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
-  mode: 'development',
+const TerserPlugin = require('terser-webpack-plugin');
 
-  entry: './src/extension.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
-  output: {
-    // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'extension.js',
-    libraryTarget: 'commonjs2',
-    devtoolModuleFilenameTemplate: '../[resource-path]'
-  },
-  devtool: 'source-map',
-  externals: {
-    vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
-  },
-  resolve: {
-    // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
-    extensions: ['.ts', '.js']
-  },
-  module: {
-    rules: [
-      {
-        test: /\.ts$/,
-        exclude: /node_modules/,
-        use: [
-          {
-            loader: 'ts-loader'
-          }
-        ]
-      }
-    ]
+
+module.exports = function (env, argv) {
+  env = env || {};
+  env.analyzeBundle = Boolean(env.analyzeBundle);
+  env.analyzeDeps = Boolean(env.analyzeDeps);
+  env.production = env.analyzeBundle || Boolean(env.production);
+  env.optimizeImages = Boolean(env.optimizeImages) || (env.production && !env.analyzeBundle);
+
+  if (!env.optimizeImages && !fs.existsSync(path.resolve(__dirname, 'images/settings'))) {
+    env.optimizeImages = true;
   }
+
+  return [getExtensionConfig(env)];
 };
-module.exports = config;
+
+
+function getExtensionConfig(env) {
+  return {
+    name: 'extension',
+    target: 'node',
+    mode: env.production ? 'production' : 'development',
+    entry: './src/extension.ts',
+    node: {
+			__dirname: false
+		},
+    output: {
+      filename: 'extension.js',
+      libraryTarget: 'commonjs2',
+    },
+    devtool: 'source-map',
+    optimization: {
+			minimizer: [
+				new TerserPlugin({
+					cache: true,
+					parallel: true,
+					sourceMap: true,
+					terserOptions: {
+						ecma: 8,
+						// Keep the class names otherwise @log won't provide a useful name
+						// eslint-disable-next-line @typescript-eslint/camelcase
+						keep_classnames: true,
+						module: true
+					}
+				})
+			]
+		},
+    externals: {
+      vscode: 'commonjs vscode'
+    },
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
+    },
+    module: {
+      rules: [
+        {
+          test: /\.tsx?$/,
+          exclude: /node_modules|\.d\.ts$/,
+          use: {
+						loader: 'ts-loader',
+						options: {
+							experimentalWatchApi: true,
+							transpileOnly: true
+						}
+					}
+        }
+      ]
+    }
+  };
+}
