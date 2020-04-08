@@ -171,13 +171,13 @@ export class FlowOutlineProvider implements vscode.TreeDataProvider<AstNode> {
         this.context.extensionPath,
         "resources",
         "light",
-        "string.svg"
+        "icon-compare-ref-remote.svg"
       ),
       dark: path.join(
         this.context.extensionPath,
         "resources",
         "dark",
-        "string.svg"
+        "icon-compare-ref-remote.svg"
       )
     };
 

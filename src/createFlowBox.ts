@@ -2,9 +2,9 @@ import { window } from 'vscode';
 import * as vscode from 'vscode';
 import cp = require('child_process');
 
-export async function showCreateFlowBox() {
+export async function showCreateFlowBox(root?: string) {
 	const cwd = vscode.workspace.workspaceFolders![0].uri.path;
-	const result = await window.showInputBox({
+	let result = await window.showInputBox({
 		value: '',
 		valueSelection: [2, 4],
 		placeHolder: '填写工作流的名称',
@@ -17,6 +17,14 @@ export async function showCreateFlowBox() {
 			return null;
 		}
 	});
+
+	if (typeof result === 'undefined') {
+		return;
+	}
+
+	if (typeof root !== 'undefined') {
+		result = root + '.' + result;
+	}
 
 	let stdout = cp.execFileSync('arkfbp-cli', ['createflow', `${result}`], {
 		cwd: cwd,

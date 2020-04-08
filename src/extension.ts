@@ -7,7 +7,7 @@ import { ThrottledDelayer } from './async';
 import * as yaml from 'js-yaml';
 import { ITerminalMap } from "./types";
 
-import { AppProvider } from "./info";
+import { AppProvider } from "./app";
 
 import * as ts from 'typescript';
 
@@ -33,6 +33,7 @@ import { FlowTreeItem } from './flowTreeItem';
 
 import { GraphPreviewPanel } from './graph';
 import { registerStatusBarItem } from './statusBar';
+import * as arkfbp from './arkfbp';
 
 export function deactivate() {
 	if (terminal) {
@@ -67,13 +68,6 @@ export async function activate(context: ExtensionContext) {
 		window.showInformationMessage('Welcome to use ArkFBP');
 	});
 
-	// Create Flow Command
-	context.subscriptions.push(
-		vscode.commands.registerCommand('arkfbp.createFlow', async () => {
-			await showCreateFlowBox();
-		})
-	);
-
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.createFlowNode', async () => {
 			await showCreateFlowNodeBox();
@@ -87,16 +81,20 @@ export async function activate(context: ExtensionContext) {
 		runCommandInIntegratedTerminal(terminal, cmd, args, this.workspaceRoot);
 	});
 
-	const nodeProvider: AppProvider = new AppProvider(
+
+	const appProvider: AppProvider = new AppProvider(
 		context,
 		rootPath
 	);
-	vscode.window.registerTreeDataProvider("arkfbp.explorer.info", nodeProvider);
+	vscode.window.registerTreeDataProvider("arkfbp.explorer.info", appProvider);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.info.action.build", () => {
-			const cmd = 'npm';
-			const args = ['run', 'compile'];
-			runCommandInIntegratedTerminal(terminal, cmd, args, this.workspaceRoot);
+			appProvider.build(terminal);
+		})
+	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand("arkfbp.explorer.info.action.run", () => {
+			appProvider.run(terminal);
 		})
 	);
 
@@ -110,7 +108,13 @@ export async function activate(context: ExtensionContext) {
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.refresh", () => flowProvider.refresh())
 	);
 	context.subscriptions.push(
-		vscode.commands.registerCommand("arkfbp.explorer.flow.action.create", () => flowProvider.create())
+		vscode.commands.registerCommand("arkfbp.explorer.flow.action.create", (item?) => {
+			if (typeof item === 'undefined') {
+				flowProvider.create();
+			} else {
+				flowProvider.create(path.join(item.dir, item.label));
+			}
+		})
 	);
 
 	context.subscriptions.push(
@@ -118,8 +122,6 @@ export async function activate(context: ExtensionContext) {
 			const result = await vscode.window.showWarningMessage('确认删除该工作流么? \n该操作不可逆', {
 				modal: true,
 			}, 'OK');
-
-			console.info(item);
 
 			if (typeof result !== 'undefined') {
 				const flowDir = path.join(item.dir, item.label);
@@ -130,7 +132,34 @@ export async function activate(context: ExtensionContext) {
 		})
 	);
 	context.subscriptions.push(
+		vscode.commands.registerCommand('arkfbp.explorer.flow.action.createFolder', (item?) => {
+			if (typeof item === 'undefined') {
+				flowProvider.createFolder();
+			} else {
+				flowProvider.createFolder(path.join(item.dir, item.label));
+			}
+		})
+	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand('arkfbp.explorer.flow.action.copy', (item) => {
+			flowProvider.copy(path.join(item.dir, item.label));
+		})
+	);
+	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.run", (item: FlowTreeItem) => flowProvider.run(item))
+	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand("arkfbp.explorer.flow.action.open", async (flowReference: string) => {
+			console.info(flowReference);
+			const flowGraphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flowReference);
+			console.info(flowGraphDefinitionFile);
+
+			await vscode.workspace.openTextDocument(flowGraphDefinitionFile).then(doc => {
+				vscode.window.showTextDocument(doc).then(async () => {
+					vscode.commands.executeCommand('arkfbp.graph.preview');
+				});
+			});
+		})
 	);
 
 	const flowOutlineDataProvider = new FlowOutlineProvider(context);
@@ -164,7 +193,6 @@ export async function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.deleteFlowNode', async (item) => {
-			console.info('>>>', item);
 			const result = await vscode.window.showWarningMessage('确认删除该节点么? \n该操作不可逆', {
 				modal: true,
 			}, 'OK');
@@ -180,6 +208,31 @@ export async function activate(context: ExtensionContext) {
 		})
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.open', async (item) => {
+			console.info(item);
+
+			const editor = vscode.window.activeTextEditor;
+			if (!editor) {
+				return;
+			}
+
+			const flowDir = getArkFBPFlowDirByDocument(editor.document);
+			const files = arkfbp.findNodeFilesByClass(flowDir, item.cls);
+			if (files.length === 0) {
+				vscode.window.showErrorMessage('找不到对应的节点定义文件');
+				return;
+			}
+			if (files.length > 1) {
+				vscode.window.showWarningMessage('多于一个的定义文件，默认显示第一个匹配的文件');
+			}
+
+			await vscode.workspace.openTextDocument(files[0]).then(doc => {
+				vscode.window.showTextDocument(doc);
+			});
+		})
+	);
+
 	/**
 	 * Preview the Graph
 	 */
@@ -191,7 +244,6 @@ export async function activate(context: ExtensionContext) {
 			}
 
 			const flowDir = getArkFBPFlowDirByDocument(editor.document);
-			console.info(flowDir);
 			if (flowDir !== '') {
 				GraphPreviewPanel.createOrShow(context.extensionPath, path.join(flowDir, 'index.js'));
 			}

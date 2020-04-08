@@ -6,6 +6,8 @@ import { workspace, TextDocument } from 'vscode';
 import { isSwitchStatement } from 'typescript';
 import * as ts from 'typescript';
 
+import { runCommandInIntegratedTerminal } from './util';
+
 const ARKFBP_META_DIR = '.arkfbp';
 const ARKFBP_META_CONFIG_FILE = 'config.yaml';
 const ARKFBP_FLOW_DIR = 'flows';
@@ -49,7 +51,10 @@ export function getArkFBPAppDir(): string {
  *
  * @param root: string
  */
-export function getArkFBPFlowRootDir(root: string): string {
+export function getArkFBPFlowRootDir(root?: string): string {
+    if (typeof root === 'undefined') {
+        root = getArkFBPAppDir();
+    }
     return path.join(root, "src", ARKFBP_FLOW_DIR);
 }
 
@@ -293,9 +298,52 @@ export function getArkFBPFlowGraphNodes(flowDirPath: string): GraphNode[] {
 
     for (var i = 0; i < elements.length; ++i) {
         const element = elements[i];
+        console.info(`${i}, >>>, `, element);
         const graphNode = getArkFBPGraphNodeFromFile(path.join(flowDirPath, 'nodes', element));
         graphNodes.push(graphNode);
     }
 
     return graphNodes;
+}
+
+export function buildApp(workspaceRoot: string, terminal: vscode.Terminal) {
+    const cmd = 'npm';
+    const args = ['run', 'compile'];
+    runCommandInIntegratedTerminal(terminal, cmd, args, workspaceRoot);
+}
+
+export function runApp(workspaceRoot: string, terminal: vscode.Terminal) {
+    const cmd = 'node';
+    const args = ['dist/cli.js', 'serve'];
+    runCommandInIntegratedTerminal(terminal, cmd, args, workspaceRoot);
+}
+
+export function runFlow(workspaceRoot: string, terminal: vscode.Terminal, flowName: string) {
+    const cmd = 'node';
+    const args = ["./dist/cli.js", "run", "--name", `${flowName}`];
+    runCommandInIntegratedTerminal(terminal, cmd, args, workspaceRoot);
+}
+
+export function getFlowDirPathByReference(workspaceRoot: string, reference: string): string {
+    const p = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference);
+    return p;
+}
+
+export function getFlowGraphDefinitionFileByReference(workspaceRoot: string, reference: string): string {
+    const p = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference, 'index.js');
+    return p;
+}
+
+export function findNodeFilesByClass(flowDirPath: string, classID: string): string[] {
+    const nodesDirPath = path.join(flowDirPath, 'nodes');
+    console.info(nodesDirPath);
+    const elements = fs.readdirSync(nodesDirPath);
+    const matchedFiles = [];
+    elements.forEach((element) => {
+        if (element.toLocaleLowerCase() === (classID + '.js').toLocaleLowerCase()) {
+            matchedFiles.push(path.join(nodesDirPath, element));
+        }
+    });
+
+    return matchedFiles;
 }

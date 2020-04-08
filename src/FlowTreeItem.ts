@@ -13,7 +13,8 @@ import {
       public readonly dir: string,
       public readonly collapsibleState: TreeItemCollapsibleState,
       public readonly tooltip: string,
-      public readonly command?: Command
+      public readonly reference: string,
+      public readonly command?: Command,
     ) {
       super(label, collapsibleState);
       this.dir = dir;

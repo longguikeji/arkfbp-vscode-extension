@@ -18,7 +18,6 @@ export class GraphPreviewPanel {
 
 	public static createOrShow(extensionPath: string, graphFilePath: string) {
 		const editor = vscode.window.activeTextEditor;
-
 		const flowDir = path.dirname(graphFilePath);
 		let graphNodes = getArkFBPFlowGraphNodes(flowDir);
 		console.info(graphNodes);
@@ -56,7 +55,7 @@ export class GraphPreviewPanel {
 		const panel = vscode.window.createWebviewPanel(
 			GraphPreviewPanel.viewType,
 			'Graph',
-			vscode.ViewColumn.One,
+			vscode.ViewColumn.Two,
 			{
 				// Enable javascript in the webview
 				enableScripts: true,

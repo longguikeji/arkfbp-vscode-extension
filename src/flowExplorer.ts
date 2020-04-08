@@ -18,8 +18,11 @@ import { ScriptEventEmitter, MaybeScript } from "./types";
 import { FlowDirTreeItem } from "./flowDirTreeItem";
 
 import { runCommandInIntegratedTerminal } from './util';
-import { getArkFBPFlowRootDir, getArkFBPFlows, getArkFBPAppDir } from './arkfbp';
-
+import { getArkFBPFlowRootDir, getArkFBPFlows, getArkFBPAppDir, isArkFBPApp } from './arkfbp';
+import * as arkfbp from './arkfbp';
+import { showCreateFlowFolderBox } from './createFlowFolderBox';
+import { showCreateFlowBox } from './createFlowBox';
+import * as copydir from 'copy-dir';
 
 export class FlowsProvider
   implements TreeDataProvider<FlowTreeItem | FlowDirTreeItem> {
@@ -40,17 +43,62 @@ export class FlowsProvider
     this._onDidChangeTreeData.fire();
   }
 
-  create(): void {
-    vscode.commands.executeCommand('arkfbp.createFlow').then(() => {
-      this.refresh();
-    });
+  async create(p?: string) {
+    let flowReference = '';
+    if (typeof p !== 'undefined') {
+      if (path.isAbsolute(p)) {
+        // extract last flow part
+        const flowRootDir = arkfbp.getArkFBPFlowRootDir(arkfbp.getArkFBPAppDir());
+        if (p.indexOf(flowRootDir) >= 0) {
+          flowReference = p.slice(flowRootDir.length + 1);
+        }
+      }
+
+      flowReference = flowReference.replace('/', '.');
+    }
+
+    console.info(flowReference);
+    const result = await showCreateFlowBox(flowReference);
+    this.refresh();
+  }
+
+  async createFolder(p?: string) {
+    if (typeof p === 'undefined') {
+      p = arkfbp.getArkFBPFlowRootDir();
+    } else {
+      if (!path.isAbsolute(p)) {
+        p = path.join(arkfbp.getArkFBPFlowRootDir(), p);
+      }
+    }
+
+    const result = await showCreateFlowFolderBox(p);
+    this.refresh();
+  }
+
+  copy(p: string) {
+    const srcName = path.basename(p);
+    let dstName: string = p;
+    while (1) {
+      const x = dstName.charCodeAt(dstName.length - 1);
+      if (x >= 48 && x <= 57) {
+        dstName = dstName.slice(0, dstName.length - 1) + (Number(String.fromCharCode(x)) + 1).toString();
+      } else {
+        dstName = dstName + '1';
+      }
+      console.info(p, dstName);
+      if (!fs.existsSync(dstName)) {
+        break;
+      }
+    }
+
+
+    copydir.sync(p, dstName);
+    this.refresh();
   }
 
   run(item: FlowTreeItem): void {
-    const flowName = item.command.arguments[0];
-    const args = ["./dist/cli.js", "run", "--name", `${flowName}`];
-
-    runCommandInIntegratedTerminal(this.terminal, 'node', args, this.workspaceRoot);
+    const flowName = item.reference;
+    arkfbp.runFlow(this.workspaceRoot, this.terminal, flowName);
   }
 
   getTreeItem(element: FlowTreeItem | FlowDirTreeItem): TreeItem {
@@ -63,16 +111,12 @@ export class FlowsProvider
     return new Promise((resolve: Function) => {
       const folders: any = workspace.workspaceFolders;
       if (element) {
-
-        console.info(element, 'getChildren');
         const root = getArkFBPAppDir();
 
         const dir: string = path.join(
           element.dir,
           element.label,
         );
-
-        console.info(dir);
 
         this.renderSingleWorkspace(resolve, dir);
       } else {
@@ -102,20 +146,10 @@ export class FlowsProvider
     if (this.pathExists(rootPath)) {
       resolve(this.mkTreeItemsFromPackageScripts(rootPath));
     } else {
-      vscode.window.showInformationMessage("Workspace has no flows directory");
       resolve([]);
     }
   }
 
-  /**
-  * Takes a path to project, return a list of all keys
-  * from the scripts section
-  *
-  * @private
-  * @param {string} flowsRootPath
-  * @returns {FlowTreeItem[]}
-  * @memberof ScriptNodeProvider
-  */
   private mkTreeItemsFromPackageScripts(
     flowsRootPath: string
   ): (FlowTreeItem | FlowDirTreeItem)[] {
@@ -127,16 +161,18 @@ export class FlowsProvider
         const cmd = element as string;
         const r = getArkFBPFlowRootDir(getArkFBPAppDir());
         const x = flowsRootPath.slice(r.length + 1);
+        const reference = x.length > 0 ? x + '/' + cmd : cmd;
 
         const item = new FlowTreeItem(
           `${cmd}`,
           flowsRootPath,
           TreeItemCollapsibleState.None,
-          cmd,
+          '',
+          reference,
           {
-            title: "Run Flow",
-            command: "arkfbp.explorer.flow.action.run",
-            arguments: [x.length > 0 ? x + '/' + cmd : cmd, flowsRootPath]
+            title: "Open flow definition",
+            command: "arkfbp.explorer.flow.action.open",
+            arguments: [reference],
           }
         );
 
@@ -145,13 +181,13 @@ export class FlowsProvider
             this.context.extensionPath,
             "resources",
             "light",
-            "file_type_npm.svg"
+            "icon-status-copied.svg"
           ),
           dark: path.join(
             this.context.extensionPath,
             "resources",
             "dark",
-            "file_type_npm.svg"
+            "icon-status-copied.svg"
           )
         };
         treeItems.push(item);
@@ -168,13 +204,13 @@ export class FlowsProvider
             this.context.extensionPath,
             "resources",
             "light",
-            "folder.svg"
+            "icon-open-folder.svg"
           ),
           dark: path.join(
             this.context.extensionPath,
             "resources",
             "dark",
-            "folder.svg"
+            "icon-open-folder.svg"
           )
         };
 
