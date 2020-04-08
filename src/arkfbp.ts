@@ -1,6 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
+import * as cp from 'child_process';
+import * as babel from '@babel/core';
 
 import { workspace, TextDocument } from 'vscode';
 import { isSwitchStatement } from 'typescript';
@@ -260,7 +262,7 @@ export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode {
 
             cls: '',
             id: '',
-            next:'',
+            next: '',
             name: '',
             base: '',
         };
@@ -285,6 +287,15 @@ export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode {
     return p;
 }
 
+export function getFlowPath(flow: string): string {
+    return flow.replace(/\./g, '/');
+}
+
+export function getGraphFile(flow: string): string {
+    const flowPath = getFlowPath(flow);
+    const flowRootDirPath = getArkFBPFlowRootDir(getArkFBPAppDir());
+    return path.join(flowRootDirPath, flowPath, 'index.js');
+}
 
 /**
  * Get all nodes defined in the flow directory
@@ -346,4 +357,64 @@ export function findNodeFilesByClass(flowDirPath: string, classID: string): stri
     });
 
     return matchedFiles;
+}
+
+export function createNode(options: { flow: string, base: string, class: string, id: string }): boolean {
+    const cwd = vscode.workspace.workspaceFolders![0].uri.path;
+    let stdout = cp.execFileSync('arkfbp-cli', ['createnode', '--flow', `${options.flow}`, '--base', `${options.base}`, '--class', `${options.class}`, '--id', `${options.id}`], {
+        cwd: cwd,
+    });
+
+    console.info(stdout.toString());
+    return true;
+}
+
+export function updateFlowGraph(flow: string, node: {
+    id: string,
+    cls: string,
+    filename: string,
+    next?: string,
+}) {
+    const graphFilePath = getGraphFile(flow);
+    const nodes = getArkFBPGraphNodes(graphFilePath);
+    nodes.push(node);
+    console.info(nodes);
+
+    const code = fs.readFileSync(graphFilePath).toString();
+    const result = babel.transform(code, {
+        plugins: [myImportInjector],
+    });
+
+    function myImportInjector({ types, template }) {
+        const myImport = template(`import { ${node.cls} } from "./nodes/${node.filename}";`, { sourceType: "module" });
+        return {
+            visitor: {
+                Program(path, state) {
+                    const lastImport = path.get("body").filter(p => p.isImportDeclaration()).pop();
+                    if (lastImport) {
+                        lastImport.insertAfter(myImport());
+                    }
+                },
+            },
+        };
+    }
+
+    console.info(result);
+
+    const editor = vscode.window.activeTextEditor;
+    if (editor !== undefined) {
+        // const code: string = editor.document.getText();
+        // const posStart = posToLine(code, pos);
+        // const posEnd = posToLine(code, end);
+        // editor.selection = new vscode.Selection(posStart, posEnd);
+        // editor.revealRange(
+        //     new vscode.Range(posStart, posEnd),
+        //     vscode.TextEditorRevealType.InCenterIfOutsideViewport
+        // );
+        // editor.show();
+        vscode.workspace.openTextDocument(graphFilePath);
+    } else {
+
+    }
+
 }

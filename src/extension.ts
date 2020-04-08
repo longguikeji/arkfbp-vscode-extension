@@ -141,6 +141,14 @@ export async function activate(context: ExtensionContext) {
 		})
 	);
 	context.subscriptions.push(
+		vscode.commands.registerCommand('arkfbp.explorer.flow.action.openGraphDefinitionFile', async (flow: string) => {
+			const graphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flow);
+			vscode.workspace.openTextDocument(graphDefinitionFile).then(doc => {
+				vscode.window.showTextDocument(doc);
+			});
+		})
+	);
+	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flow.action.copy', (item) => {
 			flowProvider.copy(path.join(item.dir, item.label));
 		})
@@ -149,12 +157,12 @@ export async function activate(context: ExtensionContext) {
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.run", (item: FlowTreeItem) => flowProvider.run(item))
 	);
 	context.subscriptions.push(
-		vscode.commands.registerCommand("arkfbp.explorer.flow.action.open", async (flowReference: string) => {
-			console.info(flowReference);
-			const flowGraphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flowReference);
-			console.info(flowGraphDefinitionFile);
+		vscode.commands.registerCommand("arkfbp.explorer.flow.action.open", async (item: any) => {
+			const flow = item.reference;
+			const graphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flow);
+			console.info(graphDefinitionFile);
 
-			await vscode.workspace.openTextDocument(flowGraphDefinitionFile).then(doc => {
+			await vscode.workspace.openTextDocument(graphDefinitionFile).then(doc => {
 				vscode.window.showTextDocument(doc).then(async () => {
 					vscode.commands.executeCommand('arkfbp.graph.preview');
 				});
@@ -169,6 +177,12 @@ export async function activate(context: ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.createFlowNode', () => {
 			vscode.commands.executeCommand('arkfbp.createFlowNode').then(() => flowOutlineDataProvider.refresh());
+		})
+	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.copyFlowNode', (item) => {
+			console.info(item);
+			//vscode.commands.executeCommand('arkfbp.createFlowNode').then(() => flowOutlineDataProvider.refresh());
 		})
 	);
 	context.subscriptions.push(

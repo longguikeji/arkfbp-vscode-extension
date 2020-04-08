@@ -84,6 +84,22 @@
         }
       },
       {
+        "command": "arkfbp.explorer.flow.action.openGraphDefinitionFile",
+        "title": "Open the flow graph definition file",
+        "icon": {
+          "light": "resources/light/icon-open.svg",
+          "dark": "resources/dark/icon-open.svg"
+        }
+      },
+      {
+        "command": "arkfbp.explorer.flow.action.open",
+        "title": "Open the flow graph",
+        "icon": {
+          "light": "resources/light/icon-open.svg",
+          "dark": "resources/dark/icon-open.svg"
+        }
+      },
+      {
         "command": "arkfbp.explorer.flow.action.copy",
         "title": "Copy the flow or flow folder",
         "icon": {
@@ -250,20 +266,26 @@
       ],
       "view/item/context": [
         {
-          "command": "arkfbp.explorer.flow.action.copy",
+          "command": "arkfbp.explorer.flow.action.open",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
           "group": "inline@1"
         },
         {
-          "command": "arkfbp.explorer.flow.action.delete",
+          "command": "arkfbp.explorer.flow.action.copy",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
           "group": "inline@2"
         },
         {
-          "command": "arkfbp.explorer.flow.action.run",
+          "command": "arkfbp.explorer.flow.action.delete",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
           "group": "inline@3"
         },
+        {
+          "command": "arkfbp.explorer.flow.action.run",
+          "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
+          "group": "inline@4"
+        },
+
         {
           "command": "arkfbp.explorer.flow.action.create",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flowFolder'",
@@ -353,6 +375,7 @@
     "terser-webpack-plugin": "2.2.1"
   },
   "dependencies": {
+    "@babel/core": "^7.9.0",
     "copy-dir": "^1.2.0",
     "js-yaml": "^3.13.1",
     "rimraf": "^3.0.2",

@@ -1,6 +1,7 @@
 import { window } from 'vscode';
 import * as vscode from 'vscode';
-import cp = require('child_process');
+import * as arkfbp from './arkfbp';
+import { idText } from 'typescript';
 
 export async function showCreateFlowNodeBox() {
 	const flowName = await window.showInputBox({
@@ -45,11 +46,23 @@ export async function showCreateFlowNodeBox() {
 		return;
 	}
 
-	const cwd = vscode.workspace.workspaceFolders![0].uri.path;
-	let stdout = cp.execFileSync('arkfbp-cli', ['createnode', '--flow', `${flowName}`, '--base', `${baseClassName}`, '--class', `${className}`, '--id', `${nodeID}`], {
-		cwd: cwd,
+	const filename = className[0].toLowerCase() + className.slice(1);
+
+	arkfbp.updateFlowGraph('a.b.c', {
+		cls: className,
+		id: nodeID,
+		filename: filename,
 	});
 
-	console.info(stdout.toString());
-	window.showInformationMessage(`工作流节点创建成功`);
+	// const r = arkfbp.createNode({
+	// 	flow: flowName,
+	// 	base: baseClassName,
+	// 	class: className,
+	// 	id: nodeID,
+	// });
+	// if (r) {
+	// 	window.showInformationMessage(`新节点${className}创建成功`);
+	// } else {
+	// 	window.showErrorMessage(`新节点${className}创建失败`);
+	// }
 }

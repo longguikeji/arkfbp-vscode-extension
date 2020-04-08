@@ -150,6 +150,25 @@ export class FlowOutlineProvider implements vscode.TreeDataProvider<AstNode> {
     this._onDidChangeTreeData.fire();
   }
 
+  public copy(p: string) {
+    // const srcName = path.basename(p);
+    // let dstName: string = p;
+    // while (1) {
+    //   const x = dstName.charCodeAt(dstName.length - 1);
+    //   if (x >= 48 && x <= 57) {
+    //     dstName = dstName.slice(0, dstName.length - 1) + (Number(String.fromCharCode(x)) + 1).toString();
+    //   } else {
+    //     dstName = dstName + '1';
+    //   }
+    //   if (!fs.existsSync(dstName)) {
+    //     break;
+    //   }
+    // }
+
+    // copydir.sync(p, dstName);
+    this.refresh();
+  }
+
   public getTreeItem(element: AstNode): vscode.TreeItem {
     let label: string;
     if (element['cls']) {

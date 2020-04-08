@@ -85,12 +85,10 @@ export class FlowsProvider
       } else {
         dstName = dstName + '1';
       }
-      console.info(p, dstName);
       if (!fs.existsSync(dstName)) {
         break;
       }
     }
-
 
     copydir.sync(p, dstName);
     this.refresh();
@@ -171,7 +169,7 @@ export class FlowsProvider
           reference,
           {
             title: "Open flow definition",
-            command: "arkfbp.explorer.flow.action.open",
+            command: "arkfbp.explorer.flow.action.openGraphDefinitionFile",
             arguments: [reference],
           }
         );
