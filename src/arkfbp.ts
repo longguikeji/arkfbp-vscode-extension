@@ -3,6 +3,8 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as babel from '@babel/core';
+import * as t from "@babel/types";
+import * as template from "@babel/template";
 
 import { workspace, TextDocument } from 'vscode';
 import { isSwitchStatement } from 'typescript';
@@ -345,6 +347,13 @@ export function getFlowGraphDefinitionFileByReference(workspaceRoot: string, ref
     return p;
 }
 
+export function getFlowReferenceByAbsoluteFlowDirPath(p: string): string{
+    const flowRootDirPath = getArkFBPFlowRootDir(getArkFBPAppDir());
+    let referencePath = p.slice(flowRootDirPath.length+1);
+    referencePath = referencePath.replace(/\//g, '.');
+    return referencePath;
+}
+
 export function findNodeFilesByClass(flowDirPath: string, classID: string): string[] {
     const nodesDirPath = path.join(flowDirPath, 'nodes');
     console.info(nodesDirPath);
@@ -382,7 +391,7 @@ export function updateFlowGraph(flow: string, node: {
 
     const code = fs.readFileSync(graphFilePath).toString();
     const result = babel.transform(code, {
-        plugins: [myImportInjector],
+        plugins: [myImportInjector, myImportInjector2],
     });
 
     function myImportInjector({ types, template }) {
@@ -394,27 +403,38 @@ export function updateFlowGraph(flow: string, node: {
                     if (lastImport) {
                         lastImport.insertAfter(myImport());
                     }
+
                 },
             },
         };
     }
 
-    console.info(result);
+    function myImportInjector2({ types, template }) {
+        return {
+            visitor: {
+                ClassMethod(path, state) {
+                    if (path.node.key.name === 'createNodes') {
+                        const returnStatement = path.node.body.body[0];
+                        const arrayExpression = returnStatement.argument as t.ArrayExpression;
+                        const o1 = t.objectProperty(t.identifier('cls'), t.identifier(node.cls));
+                        const o2 = t.objectProperty(t.identifier('id'), t.stringLiteral(node.id));
+                        arrayExpression.elements.push(
+                            t.objectExpression([o1, o2])
+                        );
+                    }
+                }
+            },
+        };
+    }
 
     const editor = vscode.window.activeTextEditor;
     if (editor !== undefined) {
-        // const code: string = editor.document.getText();
-        // const posStart = posToLine(code, pos);
-        // const posEnd = posToLine(code, end);
-        // editor.selection = new vscode.Selection(posStart, posEnd);
-        // editor.revealRange(
-        //     new vscode.Range(posStart, posEnd),
-        //     vscode.TextEditorRevealType.InCenterIfOutsideViewport
-        // );
-        // editor.show();
-        vscode.workspace.openTextDocument(graphFilePath);
+        fs.writeFileSync(graphFilePath, result.code);
+        vscode.workspace.openTextDocument(graphFilePath).then(doc => {
+            vscode.window.showTextDocument(doc);
+        });
     } else {
-
+        fs.writeFileSync(graphFilePath, result);
     }
 
 }

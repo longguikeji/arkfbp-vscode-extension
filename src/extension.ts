@@ -68,19 +68,9 @@ export async function activate(context: ExtensionContext) {
 		window.showInformationMessage('Welcome to use ArkFBP');
 	});
 
-	context.subscriptions.push(
-		vscode.commands.registerCommand('arkfbp.createFlowNode', async () => {
-			await showCreateFlowNodeBox();
-		})
-	);
-
-	// Compile Command
 	vscode.commands.registerCommand("arkfbp.build", () => {
-		const cmd = 'npm';
-		const args = ['run', 'compile'];
-		runCommandInIntegratedTerminal(terminal, cmd, args, this.workspaceRoot);
+		arkfbp.buildApp(this.workspaceRoot, terminal);
 	});
-
 
 	const appProvider: AppProvider = new AppProvider(
 		context,
@@ -175,8 +165,18 @@ export async function activate(context: ExtensionContext) {
 		treeDataProvider: flowOutlineDataProvider,
 	});
 	context.subscriptions.push(
-		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.createFlowNode', () => {
-			vscode.commands.executeCommand('arkfbp.createFlowNode').then(() => flowOutlineDataProvider.refresh());
+		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.createFlowNode', async () => {
+			const editor = vscode.window.activeTextEditor;
+			if (editor === undefined) {
+				return;
+			}
+
+			const flowDirPath = getArkFBPFlowDirByDocument(editor.document);
+			const flowReference = arkfbp.getFlowReferenceByAbsoluteFlowDirPath(flowDirPath);
+
+			await showCreateFlowNodeBox(flowReference).then(() => {
+				flowOutlineDataProvider.refresh();
+			});
 		})
 	);
 	context.subscriptions.push(
@@ -207,6 +207,8 @@ export async function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.deleteFlowNode', async (item) => {
+			// @Todo: delete the file and update the graph file
+
 			const result = await vscode.window.showWarningMessage('确认删除该节点么? \n该操作不可逆', {
 				modal: true,
 			}, 'OK');

@@ -3,9 +3,10 @@ import * as vscode from 'vscode';
 import * as arkfbp from './arkfbp';
 import { idText } from 'typescript';
 
-export async function showCreateFlowNodeBox() {
+export async function showCreateFlowNodeBox(flowReference?: string) {
 	const flowName = await window.showInputBox({
-		placeHolder: "流名称"
+		placeHolder: "流名称",
+		value: flowReference ? flowReference : '',
 	});
 
 	if (typeof flowName === 'undefined') {
@@ -32,6 +33,7 @@ export async function showCreateFlowNodeBox() {
 		[
 			'StartNode',
 			'StopNode',
+			'FunctionNode',
 			'IFNode',
 			'APINode',
 			'NopNode',
@@ -48,21 +50,21 @@ export async function showCreateFlowNodeBox() {
 
 	const filename = className[0].toLowerCase() + className.slice(1);
 
-	arkfbp.updateFlowGraph('a.b.c', {
+	const r = arkfbp.createNode({
+		flow: flowName,
+		base: baseClassName,
+		class: className,
+		id: nodeID,
+	});
+	if (!r) {
+		window.showErrorMessage(`新节点${className}创建失败`);
+	}
+
+	arkfbp.updateFlowGraph(flowName, {
 		cls: className,
 		id: nodeID,
 		filename: filename,
 	});
 
-	// const r = arkfbp.createNode({
-	// 	flow: flowName,
-	// 	base: baseClassName,
-	// 	class: className,
-	// 	id: nodeID,
-	// });
-	// if (r) {
-	// 	window.showInformationMessage(`新节点${className}创建成功`);
-	// } else {
-	// 	window.showErrorMessage(`新节点${className}创建失败`);
-	// }
+	window.showInformationMessage(`新节点${className}创建成功`);
 }
