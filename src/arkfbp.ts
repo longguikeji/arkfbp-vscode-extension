@@ -391,7 +391,10 @@ export function updateFlowGraph(flow: string, node: {
 
     const code = fs.readFileSync(graphFilePath).toString();
     const result = babel.transform(code, {
-        plugins: [myImportInjector, myImportInjector2],
+        plugins: [
+            myImportInjector,
+            myImportInjector2,
+        ],
     });
 
     function myImportInjector({ types, template }) {
