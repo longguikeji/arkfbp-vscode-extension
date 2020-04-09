@@ -1,20 +1,12 @@
 import * as vscode from 'vscode';
-import * as cp from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as rimraf  from 'rimraf';
-import { ThrottledDelayer } from './async';
 import * as yaml from 'js-yaml';
-import { ITerminalMap } from "./types";
 
 import { AppProvider } from "./app";
 
-import * as ts from 'typescript';
-
 import { FlowsProvider } from "./flowExplorer";
-import { runCommandInIntegratedTerminal } from './util';
-
-import { showCreateFlowBox } from './createFlowBox';
 import { showCreateFlowNodeBox } from './createFlowNodeBox';
 
 import { COMMAND_REFRESH, FlowOutlineProvider, COMMAND_SELECTION, posToLine } from './flowOutline';
@@ -69,7 +61,9 @@ export async function activate(context: ExtensionContext) {
 	});
 
 	vscode.commands.registerCommand("arkfbp.build", () => {
-		arkfbp.buildApp(this.workspaceRoot, terminal);
+		if (terminal) {
+			arkfbp.buildApp(rootPath, terminal);
+		}
 	});
 
 	const appProvider: AppProvider = new AppProvider(
@@ -79,12 +73,16 @@ export async function activate(context: ExtensionContext) {
 	vscode.window.registerTreeDataProvider("arkfbp.explorer.info", appProvider);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.info.action.build", () => {
-			appProvider.build(terminal);
+			if (terminal) {
+				appProvider.build(terminal);
+			}
 		})
 	);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.info.action.run", () => {
-			appProvider.run(terminal);
+			if (terminal) {
+				appProvider.run(terminal);
+			}
 		})
 	);
 

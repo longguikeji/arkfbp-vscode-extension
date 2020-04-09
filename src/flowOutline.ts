@@ -25,12 +25,14 @@ export function posToLine(scode: string, pos: number) {
 }
 
 export interface AstNode {
-  indexs: number[];
-  kind: ts.SyntaxKind;
-  pos: number;
-  end: number;
-  node: any;
-  isDirectory: boolean;
+  indexs?: number[];
+  kind?: ts.SyntaxKind;
+  pos?: number;
+  end?: number;
+  node?: any;
+  id?: string;
+  cls?: string;
+  isDirectory?: boolean;
 }
 
 export class AstModel {
@@ -65,7 +67,7 @@ export class AstModel {
         isDirectory: getNodes(node).length > 0,
       };
     }).filter((node: AstNode) => {
-      if (syntaxKindToName(node.kind) === 'ClassDeclaration') {
+      if (node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration') {
         return true;
       }
 
@@ -76,13 +78,13 @@ export class AstModel {
   }
 
   public getXChildren(parent: AstNode): AstNode[] {
-    const childNodes = parent.indexs.reduce((childs, index) => {
+    const childNodes = parent!.indexs!.reduce((childs, index) => {
       return getNodes(childs[index]);
     }, getNodes(this.sfile));
 
     return childNodes.map((node, index) => {
       return {
-        indexs: parent.indexs.concat([index]),
+        indexs: parent!.indexs!.concat([index]),
         kind: node.kind,
         pos: node.pos,
         end: node.end,
@@ -95,7 +97,7 @@ export class AstModel {
   public getChildren(parent: AstNode): AstNode[] {
     let methods = this.getXChildren(parent);
     methods = methods.filter((node: AstNode) => {
-      if (syntaxKindToName(node.kind) !== 'MethodDeclaration') {
+      if (node.kind && syntaxKindToName(node.kind) !== 'MethodDeclaration') {
         return false;
       }
 
@@ -107,7 +109,7 @@ export class AstModel {
     });
 
     if (methods.length === 0) {
-      return;
+      return [];
     }
 
     const createNodesFunc = methods[0];
@@ -115,8 +117,8 @@ export class AstModel {
 
     const returnStatement = ret[1].node.statements[0];
     const elements = returnStatement.expression.elements;
-    const flowNodes = elements.map((element) => {
-      const p = {
+    const flowNodes = elements.map((element: any) => {
+      const p: AstNode = {
         pos: element.pos,
         end: element.end,
       };

@@ -3,11 +3,9 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as babel from '@babel/core';
-import * as t from "@babel/types";
-import * as template from "@babel/template";
+import * as babelTypes from "@babel/types";
 
 import { workspace, TextDocument } from 'vscode';
-import { isSwitchStatement } from 'typescript';
 import * as ts from 'typescript';
 
 import { runCommandInIntegratedTerminal } from './util';
@@ -29,6 +27,9 @@ export function isArkFBPAppByDocument(document: TextDocument): boolean {
     const workspaceFolder = workspace.getWorkspaceFolder(document.uri);
     if (workspaceFolder) {
         const root = workspaceFolder.uri.scheme === 'file' ? workspaceFolder.uri.fsPath : undefined;
+        if (typeof root === 'undefined') {
+            return false;
+        }
         return isArkFBPApp(root);
     }
 
@@ -38,7 +39,7 @@ export function isArkFBPAppByDocument(document: TextDocument): boolean {
 export function getArkFBPAppDirByDocument(document: TextDocument): string {
     const workspaceFolder = workspace.getWorkspaceFolder(document.uri);
     if (workspaceFolder) {
-        const root = workspaceFolder.uri.scheme === 'file' ? workspaceFolder.uri.fsPath : undefined;
+        const root = workspaceFolder.uri.scheme === 'file' ? workspaceFolder.uri.fsPath : '';
         return root;
     }
 
@@ -148,13 +149,13 @@ export function getNodes(node: ts.Node) {
 }
 
 export function getXChildren(sfile: ts.Node, parent: GraphNode): GraphNode[] {
-    const childNodes = parent.indexs.reduce((childs, index) => {
+    const childNodes = parent!.indexs!.reduce((childs, index) => {
         return getNodes(childs[index]);
     }, getNodes(sfile));
 
     return childNodes.map((node, index) => {
         return {
-            indexs: parent.indexs.concat([index]),
+            indexs: parent!.indexs!.concat([index]),
             kind: node.kind,
             pos: node.pos,
             end: node.end,
@@ -183,7 +184,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
             isDirectory: getNodes(node).length > 0,
         };
     }).filter((node: GraphNode) => {
-        if (syntaxKindToName(node.kind) === 'ClassDeclaration') {
+        if (node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration') {
             return true;
         }
 
@@ -198,7 +199,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
     const cls = nodes[0];
 
     let methods = getXChildren(sfile, cls).filter((node: GraphNode) => {
-        if (syntaxKindToName(node.kind) !== 'MethodDeclaration') {
+        if (node.kind && syntaxKindToName(node.kind) !== 'MethodDeclaration') {
             return false;
         }
 
@@ -219,7 +220,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
 
     const returnStatement = ret[1].node.statements[0];
     const elements = returnStatement.expression.elements;
-    const flowNodes = elements.map((element) => {
+    const flowNodes = elements.map((element: any) => {
         const p: GraphNode = {
             pos: element.pos,
             end: element.end,
@@ -244,7 +245,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
     return flowNodes;
 }
 
-export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode {
+export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode | null {
     console.info('>>>getArkFBPGraphNodeFromFile', filePath);
     const content = fs.readFileSync(filePath).toString();
     const sfile = ts.createSourceFile(
@@ -269,7 +270,7 @@ export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode {
             base: '',
         };
     }).filter((node: GraphNode) => {
-        if (syntaxKindToName(node.kind) === 'ClassDeclaration') {
+        if (node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration') {
             return true;
         }
 
@@ -313,16 +314,20 @@ export function getArkFBPFlowGraphNodes(flowDirPath: string): GraphNode[] {
         const element = elements[i];
         console.info(`${i}, >>>, `, element);
         const graphNode = getArkFBPGraphNodeFromFile(path.join(flowDirPath, 'nodes', element));
-        graphNodes.push(graphNode);
+        if (graphNode) {
+            graphNodes.push(graphNode);
+        }
     }
 
     return graphNodes;
 }
 
-export function buildApp(workspaceRoot: string, terminal: vscode.Terminal) {
+export function buildApp(workspaceRoot: string, terminal?: vscode.Terminal) {
     const cmd = 'npm';
     const args = ['run', 'compile'];
-    runCommandInIntegratedTerminal(terminal, cmd, args, workspaceRoot);
+    if (terminal) {
+        runCommandInIntegratedTerminal(terminal, cmd, args, workspaceRoot);
+    }
 }
 
 export function runApp(workspaceRoot: string, terminal: vscode.Terminal) {
@@ -358,7 +363,7 @@ export function findNodeFilesByClass(flowDirPath: string, classID: string): stri
     const nodesDirPath = path.join(flowDirPath, 'nodes');
     console.info(nodesDirPath);
     const elements = fs.readdirSync(nodesDirPath);
-    const matchedFiles = [];
+    const matchedFiles: string[] = [];
     elements.forEach((element) => {
         if (element.toLocaleLowerCase() === (classID + '.js').toLocaleLowerCase()) {
             matchedFiles.push(path.join(nodesDirPath, element));
@@ -397,12 +402,12 @@ export function updateFlowGraph(flow: string, node: {
         ],
     });
 
-    function myImportInjector({ types, template }) {
+    function myImportInjector({ type, template }: { type: any, template: any}) {
         const myImport = template(`import { ${node.cls} } from "./nodes/${node.filename}";`, { sourceType: "module" });
         return {
             visitor: {
-                Program(path, state) {
-                    const lastImport = path.get("body").filter(p => p.isImportDeclaration()).pop();
+                Program(path: any, state: any) {
+                    const lastImport = path.get("body").filter((p: any) => p.isImportDeclaration()).pop();
                     if (lastImport) {
                         lastImport.insertAfter(myImport());
                     }
@@ -412,22 +417,26 @@ export function updateFlowGraph(flow: string, node: {
         };
     }
 
-    function myImportInjector2({ types, template }) {
+    function myImportInjector2({ types, template }: {types: any, template: any}) {
         return {
             visitor: {
-                ClassMethod(path, state) {
+                ClassMethod(path: any, state: any) {
                     if (path.node.key.name === 'createNodes') {
                         const returnStatement = path.node.body.body[0];
-                        const arrayExpression = returnStatement.argument as t.ArrayExpression;
-                        const o1 = t.objectProperty(t.identifier('cls'), t.identifier(node.cls));
-                        const o2 = t.objectProperty(t.identifier('id'), t.stringLiteral(node.id));
+                        const arrayExpression = returnStatement.argument as babelTypes.ArrayExpression;
+                        const o1 = babelTypes.objectProperty(babelTypes.identifier('cls'), babelTypes.identifier(node.cls));
+                        const o2 = babelTypes.objectProperty(babelTypes.identifier('id'), babelTypes.stringLiteral(node.id));
                         arrayExpression.elements.push(
-                            t.objectExpression([o1, o2])
+                            babelTypes.objectExpression([o1, o2])
                         );
                     }
                 }
             },
         };
+    }
+
+    if (!result){
+        return;
     }
 
     const editor = vscode.window.activeTextEditor;

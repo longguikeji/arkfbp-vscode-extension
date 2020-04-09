@@ -27,14 +27,8 @@ import {
     private readonly _onDidChangeTreeData: ScriptEventEmitter = new EventEmitter();
     public readonly onDidChangeTreeData: Event<MaybeScript> = this
       ._onDidChangeTreeData.event;
-    private fileWatcher: FileSystemWatcher;
 
     constructor(private readonly context:vscode.ExtensionContext, private readonly workspaceRoot: string) {
-      workspace.workspaceFolders.forEach(folder => {
-        const pattern: string = getPackageJson(folder.uri.path);
-        this.fileWatcher = workspace.createFileSystemWatcher(pattern);
-        this.fileWatcher.onDidChange(() => this.refresh());
-      });
     }
 
     refresh(): void {
@@ -61,7 +55,7 @@ import {
         if (element) {
           // Workspace render scripts
           const folder: WorkspaceFolder = folders.find(
-            o => o.name === element.label
+            (o: any) => o.name === element.label
           );
           const packageJsonPath: string = path.join(
             folder.uri.fsPath,
@@ -167,7 +161,7 @@ import {
           TreeItemCollapsibleState.None,
           scriptCommand,
           '',
-          null,
+          undefined,
         );
 
         item.iconPath = item.iconPath = {

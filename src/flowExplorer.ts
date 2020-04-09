@@ -29,14 +29,8 @@ export class FlowsProvider
   private readonly _onDidChangeTreeData: ScriptEventEmitter = new EventEmitter();
   public readonly onDidChangeTreeData: Event<MaybeScript> = this
     ._onDidChangeTreeData.event;
-  private fileWatcher: FileSystemWatcher;
 
   constructor(private readonly context: vscode.ExtensionContext, private readonly workspaceRoot: string, private readonly terminal: Terminal) {
-    workspace.workspaceFolders.forEach(folder => {
-      // const pattern: string = getPackageJson(folder.uri.path);
-      // this.fileWatcher = workspace.createFileSystemWatcher(pattern);
-      // this.fileWatcher.onDidChange(() => this.refresh());
-    });
   }
 
   refresh(): void {
@@ -194,7 +188,7 @@ export class FlowsProvider
           element[0],
           flowsRootPath,
           TreeItemCollapsibleState.Collapsed,
-          null,
+          '',
         );
 
         item.iconPath = {
