@@ -1,7 +1,7 @@
 {
   "name": "arkfbp",
   "displayName": "ArkFBP - coding boosted",
-  "description": "arkfbp - make your coding life easier",
+  "description": "ArkFBP - make your coding life easier",
   "version": "0.0.2",
   "engines": {
     "vscode": "^1.37.0"
@@ -165,7 +165,7 @@
       },
       {
         "command": "arkfbp.welcome",
-        "title": "Arkfbp",
+        "title": "ArkFBP",
         "icon": {
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
@@ -305,20 +305,16 @@
           "when": "view == arkfbp.explorer.flow && viewItem == 'flowFolder'",
           "group": "inline@4"
         },
+
         {
-          "command": "arkfbp.explorer.flowOutline.action.open",
+          "command": "arkfbp.explorer.flowOutline.action.copyFlowNode",
           "when": "view == arkfbp.explorer.flowOutline",
           "group": "inline@1"
         },
         {
-          "command": "arkfbp.explorer.flowOutline.action.copyFlowNode",
-          "when": "view == arkfbp.explorer.flowOutline",
-          "group": "inline@2"
-        },
-        {
           "command": "arkfbp.explorer.flowOutline.action.deleteFlowNode",
           "when": "view == arkfbp.explorer.flowOutline",
-          "group": "inline@3"
+          "group": "inline@2"
         }
       ],
       "touchBar": [

@@ -146,6 +146,7 @@ export async function activate(context: ExtensionContext) {
 	);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.open", async (item: any) => {
+			console.info(item);
 			const flow = item.reference;
 			const graphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flow);
 			console.info(graphDefinitionFile);
@@ -157,6 +158,7 @@ export async function activate(context: ExtensionContext) {
 			});
 		})
 	);
+
 
 	const flowOutlineDataProvider = new FlowOutlineProvider(context);
 	vscode.window.createTreeView('arkfbp.explorer.flowOutline', {

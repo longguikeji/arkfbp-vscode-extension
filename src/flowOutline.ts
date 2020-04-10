@@ -182,24 +182,9 @@ export class FlowOutlineProvider implements vscode.TreeDataProvider<AstNode> {
     const item = new vscode.TreeItem(`${label}`);
     item.collapsibleState = element.isDirectory ? vscode.TreeItemCollapsibleState.Collapsed : void 0;
     item.command = {
-      title: '',
-      command: COMMAND_SELECTION,
-      arguments: [element.pos, element.end],
-    };
-
-    item.iconPath = {
-      light: path.join(
-        this.context.extensionPath,
-        "resources",
-        "light",
-        "icon-compare-ref-remote.svg"
-      ),
-      dark: path.join(
-        this.context.extensionPath,
-        "resources",
-        "dark",
-        "icon-compare-ref-remote.svg"
-      )
+      title: 'open the file',
+      command: 'arkfbp.explorer.flowOutline.action.open',
+      arguments: [{cls: element['cls']}],
     };
 
     return item;
