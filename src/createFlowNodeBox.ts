@@ -39,6 +39,7 @@ export async function showCreateFlowNodeBox(flowReference?: string) {
 			'NopNode',
 			'LoopNode',
 			'TestNode',
+			'TriggerFlowNode',
 		],
 	{
 		placeHolder: '选择基础节点',

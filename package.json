@@ -194,6 +194,15 @@
           "light": "resources/light/icon-next-commit.svg",
           "dark": "resources/dark/icon-next-commit.svg"
         }
+      },
+
+      {
+        "command": "arkfbp.explorer.dependency.action.openDocumentPage",
+        "title": "Open the npm dependency document page",
+        "icon": {
+          "light": "resources/light/icon-open.svg",
+          "dark": "resources/dark/icon-open.svg"
+        }
       }
     ],
     "snippets": [
@@ -210,14 +219,19 @@
           "group": "navigation@1"
         },
         {
+          "id": "arkfbp.explorer.dependency",
+          "name": "dependency",
+          "group": "navigation@2"
+        },
+        {
           "id": "arkfbp.explorer.flow",
           "name": "Flows",
-          "group": "navigation@2"
+          "group": "navigation@3"
         },
         {
           "id": "arkfbp.explorer.flowOutline",
           "name": "Outline",
-          "group": "navigation@3"
+          "group": "navigation@4"
         }
       ]
     },
@@ -315,6 +329,12 @@
           "command": "arkfbp.explorer.flowOutline.action.deleteFlowNode",
           "when": "view == arkfbp.explorer.flowOutline",
           "group": "inline@2"
+        },
+
+        {
+          "command": "arkfbp.explorer.dependency.action.openDocumentPage",
+          "when": "view == arkfbp.explorer.dependency && viewItem == 'dependency'",
+          "group": "inline@1"
         }
       ],
       "touchBar": [
@@ -339,9 +359,9 @@
     }
   },
   "scripts": {
-    "compile": "tsc -p ./",
+    "compile": "webpack --mode development",
     "lint": "eslint src --ext ts",
-    "watch": "tsc -watch -p ./",
+    "watch": "webpack --watch",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./out/test/runTest.js",
     "vscode:prepublish": "webpack --mode production",

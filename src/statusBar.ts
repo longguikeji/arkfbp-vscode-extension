@@ -13,10 +13,10 @@ function updateStatusBarItem(): void {
 }
 
 export function registerStatusBarItem(context: vscode.ExtensionContext) {
-    if (statusBarItem) {
+    updateStatusBarItem();
+    if (statusBarItem !== null) {
         context.subscriptions.push(statusBarItem);
         context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updateStatusBarItem));
         context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(updateStatusBarItem));
-        updateStatusBarItem();
     }
 }

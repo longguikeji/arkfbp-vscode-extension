@@ -5,6 +5,7 @@ import * as rimraf  from 'rimraf';
 import * as yaml from 'js-yaml';
 
 import { AppProvider } from "./app";
+import { DependencyProvider } from "./dependency";
 
 import { FlowsProvider } from "./flowExplorer";
 import { showCreateFlowNodeBox } from './createFlowNodeBox';
@@ -85,6 +86,19 @@ export async function activate(context: ExtensionContext) {
 			}
 		})
 	);
+
+	/////
+	const dependencyProvider: DependencyProvider = new DependencyProvider(
+		context,
+		rootPath
+	);
+	vscode.window.registerTreeDataProvider("arkfbp.explorer.dependency", dependencyProvider);
+	context.subscriptions.push(
+		vscode.commands.registerCommand('arkfbp.explorer.dependency.action.openDocumentPage', async (item: any) => {
+			vscode.env.openExternal(vscode.Uri.parse(`https://npmjs.com/package/${item.label}`));
+		})
+	);
+	//////
 
 	const flowProvider: FlowsProvider = new FlowsProvider(
 		context,

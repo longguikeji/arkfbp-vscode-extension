@@ -104,7 +104,6 @@ export function isArkFBPFlow(root: string): boolean {
  * @param root
  */
 export function getArkFBPFlowDirByDocument(document: TextDocument): string {
-    console.info('getArkFBPFlowDirByDocument:', document.uri.fsPath);
     const flowRootDir = getArkFBPFlowRootDir(workspace.rootPath);
     let dirname = path.dirname(document.uri.fsPath);
     let flowDir: string = '';
