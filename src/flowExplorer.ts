@@ -20,7 +20,7 @@ import { FlowDirTreeItem } from "./flowDirTreeItem";
 import { runCommandInIntegratedTerminal } from './util';
 import { getArkFBPFlowRootDir, getArkFBPFlows, getArkFBPAppDir, isArkFBPApp } from './arkfbp';
 import * as arkfbp from './arkfbp';
-import { showCreateFlowFolderBox } from './createFlowFolderBox';
+import { showCreateFlowFolderBox, showRenameBox } from './createFlowFolderBox';
 import { showCreateFlowBox } from './createFlowBox';
 import * as copydir from 'copy-dir';
 
@@ -65,8 +65,17 @@ export class FlowsProvider
       }
     }
 
-    const result = await showCreateFlowFolderBox(p);
+    const result = await showRenameBox(p);
     this.refresh();
+  }
+
+  async rename(dir: string, label: string) {
+    const result = await showCreateFlowFolderBox(label);
+    if (result !== null || result !== undefined) {
+      fs.rename(path.join(dir, label), path.join(dir, result), () => {
+        this.refresh();
+      });
+    }
   }
 
   copy(p: string) {

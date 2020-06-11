@@ -9,10 +9,17 @@ import { workspace, TextDocument } from 'vscode';
 import * as ts from 'typescript';
 
 import { runCommandInIntegratedTerminal } from './util';
+import { Database, Table } from './models/database';
+import {
+    parse,
+    stringify,
+    assign
+  } from 'comment-json';
 
 const ARKFBP_META_DIR = '.arkfbp';
 const ARKFBP_META_CONFIG_FILE = 'config.yaml';
 const ARKFBP_FLOW_DIR = 'flows';
+const ARKFBP_DATBASE_DIR = 'databases';
 
 export function isArkFBPApp(root: string): boolean {
     try {
@@ -67,7 +74,7 @@ export function getArkFBPFlows(dir: string, includeGroup: boolean = false): (str
     const flows: (string | [string, boolean])[] = [];
     const elements = fs.readdirSync(dir);
 
-    elements.forEach((element) => {
+    elements.forEach(element => {
         if (isArkFBPFlow(path.join(dir, element))) {
             flows.push(element);
         } else {
@@ -79,6 +86,67 @@ export function getArkFBPFlows(dir: string, includeGroup: boolean = false): (str
     });
 
     return flows;
+}
+
+
+export function getDatabaseRootDir(root?: string): string {
+    if (root === undefined) {
+        root = getArkFBPAppDir();
+    }
+    return path.join(root, "src", ARKFBP_DATBASE_DIR);
+}
+
+export function getDatabases(): Database[] {
+    const databaseDir = getDatabaseRootDir();
+    const elements = fs.readdirSync(databaseDir);
+    const databases: Database[] = [];
+    elements.forEach(element => {
+        if (element === 'migrations') {
+            return;
+        }
+
+        const database = new Database(element);
+        const tablesDir = path.join(databaseDir, element, 'tables');
+        if (!fs.existsSync(tablesDir)) {
+            return;
+        }
+
+        const tables = fs.readdirSync(tablesDir);
+
+        tables.forEach(table => {
+            const t = new Table(table);
+            const tableDefinitionFilePath = path.join(tablesDir, table, 'index.json');
+            if (!fs.existsSync(tableDefinitionFilePath)) {
+                return;
+            }
+
+            t.loadFromFile(tableDefinitionFilePath);
+
+            /**
+             * load the snapshots of the table
+             */
+            const snapshotsDir = path.join(tablesDir, table, 'snapshots');
+            if (fs.existsSync(snapshotsDir)) {
+                const snapshots = fs.readdirSync(snapshotsDir);
+                snapshots.forEach(snapshot => {
+                    const snapshotTable = new Table(table);
+                    const tableDefinitionFilePath = path.join(snapshotsDir, snapshot);
+                    if (!fs.existsSync(tableDefinitionFilePath)) {
+                        return;
+                    }
+
+                    snapshotTable.loadFromFile(tableDefinitionFilePath);
+                    t.snapshots.push(snapshotTable);
+                });
+            }
+
+            database.tables.push(t);
+        });
+
+        databases.push(database);
+    });
+
+    return databases;
 }
 
 export function isArkFBPFlow(root: string): boolean {
@@ -448,4 +516,14 @@ export function updateFlowGraph(flow: string, node: {
         fs.writeFileSync(graphFilePath, result);
     }
 
+}
+
+export function createDatabase(options: { name: string }): boolean {
+    const cwd = vscode.workspace.workspaceFolders![0].uri.path;
+    let stdout = cp.execFileSync('arkfbp', ['db', 'create', '--name', `${options.name}`], {
+        cwd: cwd,
+    });
+
+    console.info(stdout.toString());
+    return true;
 }

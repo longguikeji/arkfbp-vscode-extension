@@ -2,7 +2,7 @@
   "name": "arkfbp",
   "displayName": "ArkFBP - coding boosted",
   "description": "ArkFBP - make your coding life easier",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.37.0"
   },
@@ -35,6 +35,23 @@
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "arkfbp.explorer.database.action.create",
+        "title": "Create",
+        "icon": {
+          "light": "resources/light/icon-add.svg",
+          "dark": "resources/dark/icon-add.svg"
+        }
+      },
+      {
+        "command": "arkfbp.explorer.database.action.refresh",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/icon-refresh.svg",
+          "dark": "resources/dark/icon-refresh.svg"
+        }
+      },
+
       {
         "command": "arkfbp.graph.preview",
         "title": "arkfbp: preview the flow graph",
@@ -97,6 +114,14 @@
         "icon": {
           "light": "resources/light/icon-open.svg",
           "dark": "resources/dark/icon-open.svg"
+        }
+      },
+      {
+        "command": "arkfbp.explorer.flow.action.rename",
+        "title": "Rename",
+        "icon": {
+          "light": "resources/light/icon-gear.svg",
+          "dark": "resources/dark/icon-gear.svg"
         }
       },
       {
@@ -195,7 +220,6 @@
           "dark": "resources/dark/icon-next-commit.svg"
         }
       },
-
       {
         "command": "arkfbp.explorer.dependency.action.openDocumentPage",
         "title": "Open the npm dependency document page",
@@ -224,18 +248,24 @@
           "group": "navigation@2"
         },
         {
+          "id": "arkfbp.explorer.database",
+          "name": "database",
+          "group": "navigation@3"
+        },
+        {
           "id": "arkfbp.explorer.flow",
           "name": "Flows",
-          "group": "navigation@3"
+          "group": "navigation@4"
         },
         {
           "id": "arkfbp.explorer.flowOutline",
           "name": "Outline",
-          "group": "navigation@4"
+          "group": "navigation@5"
         }
       ]
     },
     "menus": {
+      "commandPalette": [],
       "view/title": [
         {
           "command": "arkfbp.explorer.flow.action.create",
@@ -276,50 +306,71 @@
           "command": "arkfbp.graph.preview",
           "when": "view == arkfbp.explorer.flowOutline",
           "group": "navigation@3"
+        },
+
+
+        {
+          "command": "arkfbp.explorer.database.action.create",
+          "when": "view == arkfbp.explorer.database",
+          "group": "navigation@1"
+        },
+        {
+          "command": "arkfbp.explorer.database.action.refresh",
+          "when": "view == arkfbp.explorer.database",
+          "group": "navigation@2"
         }
       ],
       "view/item/context": [
         {
-          "command": "arkfbp.explorer.flow.action.open",
+          "command": "arkfbp.explorer.flow.action.rename",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
           "group": "inline@1"
         },
         {
-          "command": "arkfbp.explorer.flow.action.copy",
+          "command": "arkfbp.explorer.flow.action.open",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
           "group": "inline@2"
         },
         {
-          "command": "arkfbp.explorer.flow.action.delete",
+          "command": "arkfbp.explorer.flow.action.copy",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
           "group": "inline@3"
+        },
+        {
+          "command": "arkfbp.explorer.flow.action.delete",
+          "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
+          "group": "inline@4"
         },
         {
           "command": "arkfbp.explorer.flow.action.run",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flow'",
-          "group": "inline@4"
+          "group": "inline@5"
         },
         {
-          "command": "arkfbp.explorer.flow.action.create",
+          "command": "arkfbp.explorer.flow.action.rename",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flowFolder'",
           "group": "inline@1"
         },
         {
-          "command": "arkfbp.explorer.flow.action.copy",
+          "command": "arkfbp.explorer.flow.action.create",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flowFolder'",
           "group": "inline@2"
         },
         {
-          "command": "arkfbp.explorer.flow.action.createFolder",
+          "command": "arkfbp.explorer.flow.action.copy",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flowFolder'",
           "group": "inline@3"
         },
         {
-          "command": "arkfbp.explorer.flow.action.delete",
+          "command": "arkfbp.explorer.flow.action.createFolder",
           "when": "view == arkfbp.explorer.flow && viewItem == 'flowFolder'",
           "group": "inline@4"
         },
-
+        {
+          "command": "arkfbp.explorer.flow.action.delete",
+          "when": "view == arkfbp.explorer.flow && viewItem == 'flowFolder'",
+          "group": "inline@5"
+        },
         {
           "command": "arkfbp.explorer.flowOutline.action.copyFlowNode",
           "when": "view == arkfbp.explorer.flowOutline",
@@ -330,7 +381,6 @@
           "when": "view == arkfbp.explorer.flowOutline",
           "group": "inline@2"
         },
-
         {
           "command": "arkfbp.explorer.dependency.action.openDocumentPage",
           "when": "view == arkfbp.explorer.dependency && viewItem == 'dependency'",
@@ -409,9 +459,9 @@
     "vscode-test": "^1.3.0",
     "vue-loader": "^15.9.1",
     "vue-template-compiler": "^2.6.11",
-    "webpack": "4.41.2",
+    "webpack": "^4.41.2",
     "webpack-bundle-analyzer": "3.6.0",
-    "webpack-cli": "3.3.10",
+    "webpack-cli": "^3.3.10",
     "webpack-env": "^0.8.0"
   },
   "dependencies": {
@@ -423,6 +473,7 @@
     "@babel/types": "^7.9.5",
     "babel-generator": "^6.26.1",
     "babel-template": "^6.26.0",
+    "comment-json": "^3.0.2",
     "copy-dir": "^1.2.0",
     "core-js": "^3.6.4",
     "dedent": "^0.7.0",

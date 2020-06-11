@@ -28,58 +28,53 @@ export default class Home extends Vue {
   @Prop({ type: Workflow }) private workflow!: Workflow
 
   mounted() {
-    window.addEventListener('message', event => {
-        const message = event.data; // The json data that the extension sent
-        switch (message.command) {
-            case 'render':
-                {
-                  console.info('>>>>>>>>><<<<');
-                  const nodeTree = new NodeTree("/");
-                  const nodes = message.nodes;
-                  const edges: Edge[] = [];
-                  for (let i = 0; i < nodes.length; ++i) {
-                    switch (nodes[i].base) {
-                      case 'APINode':
-                        console.info('APINode...');
-                        nodeTree.add(new APINode(nodes[i].id, "xx.js"), nodeTree);
-                        console.info('APINode Done...');
-                        break;
-                      case 'StartNode':
-                        console.info('StartNode...');
-                        nodeTree.add(new StartNode(nodes[i].id, "xx.js"), nodeTree);
-                        break;
-                      case 'StopNode':
-                        console.info('StopNode...');
-                        nodeTree.add(new StopNode(nodes[i].id, "xx.js"), nodeTree);
-                        break;
-                      case 'FunctionNode':
-                        console.info('FunctionNode...');
-                        nodeTree.add(new FunctionNode(nodes[i].id, "xx.js"), nodeTree);
-                        break;
-                      case 'NopNode':
-                        console.info('NopNode...');
-                        nodeTree.add(new NopNode(nodes[i].id, "xx.js"), nodeTree);
-                        break;
-                      default:
-                        console.info('base...', nodes[i].base);
-                        break;
-                    }
+    const nodes = window.state;
+    console.info(window.state);
 
-                    if (typeof nodes[i].next !== 'undefined') {
-                      edges.push([nodes[i].id, nodes[i].next]);
-                    }
-                  }
+    console.info('1111');
+    const nodeTree = new NodeTree("/");
+    const edges: Edge[] = [];
+    console.info('22222222');
+    for (let i = 0; i < nodes.length; ++i) {
+      console.info(i);
+      switch (nodes[i].base) {
+        case 'APINode':
+          console.info('APINode...');
+          nodeTree.add(new APINode(nodes[i].id, "xx.js"), nodeTree);
+          console.info('APINode Done...');
+          break;
+        case 'StartNode':
+          console.info('StartNode...');
+          nodeTree.add(new StartNode(nodes[i].id, "xx.js"), nodeTree);
+          break;
+        case 'StopNode':
+          console.info('StopNode...');
+          nodeTree.add(new StopNode(nodes[i].id, "xx.js"), nodeTree);
+          break;
+        case 'FunctionNode':
+          console.info('FunctionNode...');
+          nodeTree.add(new FunctionNode(nodes[i].id, "xx.js"), nodeTree);
+          break;
+        case 'NopNode':
+          console.info('NopNode...');
+          nodeTree.add(new NopNode(nodes[i].id, "xx.js"), nodeTree);
+          break;
+        default:
+          console.info('base...', nodes[i].base);
+          break;
+      }
 
-                  console.info(1, nodes)
-                  console.info(2, nodeTree)
-                  console.info(3, edges)
+      if (typeof nodes[i].next !== 'undefined') {
+        edges.push([nodes[i].id, nodes[i].next]);
+      }
+    }
 
-                  const wf = new Workflow("wf", "wf", nodeTree, edges);
-                  this.workflow = wf;
-                }
-                break;
-        }
-    });
+    console.info(1, nodes)
+    console.info(2, nodeTree)
+    console.info(3, edges)
+
+    const wf = new Workflow("wf", "wf", nodeTree, edges);
+    this.workflow = wf;
   }
 }
 </script>

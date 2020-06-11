@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as rimraf  from 'rimraf';
+import * as rimraf from 'rimraf';
 import * as yaml from 'js-yaml';
 
 import { AppProvider } from "./app";
@@ -12,12 +12,10 @@ import { showCreateFlowNodeBox } from './createFlowNodeBox';
 
 import { COMMAND_REFRESH, FlowOutlineProvider, COMMAND_SELECTION, posToLine } from './flowOutline';
 
-import { isArkFBPApp, isArkFBPAppByDocument, getArkFBPFlowDirByDocument } from './arkfbp';
+import { isArkFBPApp, isArkFBPAppByDocument, getArkFBPFlowDirByDocument, getDatabases } from './arkfbp';
 
 import {
-	window, commands, workspace, languages, OutputChannel, ExtensionContext, ViewColumn,
-	QuickPickItem, Terminal, DiagnosticCollection, Diagnostic, Range, TextDocument, DiagnosticSeverity,
-	CodeActionProvider, CodeActionContext, CancellationToken, Command, Uri
+	window, ExtensionContext, Terminal,
 } from 'vscode';
 
 import { O_SYMLINK } from 'constants';
@@ -25,8 +23,11 @@ import { resolve } from 'dns';
 import { FlowTreeItem } from './flowTreeItem';
 
 import { GraphPreviewPanel } from './graph';
+import { PreviewWebview } from './webviews/previewWebview';
+
 import { registerStatusBarItem } from './statusBar';
 import * as arkfbp from './arkfbp';
+import { DatabaseProvider} from './databaseExplorer';
 
 export function deactivate() {
 	if (terminal) {
@@ -50,9 +51,6 @@ export async function activate(context: ExtensionContext) {
 
 	// StatusBar
 	registerStatusBarItem(context);
-
-	//workspace.onDidChangeConfiguration(_event => loadConfiguration(context), null, context.subscriptions);
-	//loadConfiguration(context);
 
 	const rootPath: string = vscode.workspace.rootPath || ".";
 
@@ -99,6 +97,24 @@ export async function activate(context: ExtensionContext) {
 		})
 	);
 	//////
+
+
+	/**
+	 * DatabaseProvider
+	 */
+
+	const databaseProvider: DatabaseProvider = new DatabaseProvider(
+		context,
+		rootPath
+	);
+	vscode.window.registerTreeDataProvider("arkfbp.explorer.database", databaseProvider);
+	context.subscriptions.push(
+		vscode.commands.registerCommand("arkfbp.explorer.database.action.create", () => databaseProvider.create())
+	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand("arkfbp.explorer.database.action.refresh", () => databaseProvider.refresh())
+	);
+
 
 	const flowProvider: FlowsProvider = new FlowsProvider(
 		context,
@@ -170,6 +186,11 @@ export async function activate(context: ExtensionContext) {
 					vscode.commands.executeCommand('arkfbp.graph.preview');
 				});
 			});
+		})
+	);
+	context.subscriptions.push(
+		vscode.commands.registerCommand("arkfbp.explorer.flow.action.rename", async (item: any) => {
+			flowProvider.rename(item.dir, item.label);
 		})
 	);
 
@@ -275,62 +296,12 @@ export async function activate(context: ExtensionContext) {
 
 			const flowDir = getArkFBPFlowDirByDocument(editor.document);
 			if (flowDir !== '') {
-				GraphPreviewPanel.createOrShow(context.extensionPath, path.join(flowDir, 'index.js'));
+				//GraphPreviewPanel.createOrShow(context.extensionPath, );
+				const v = new PreviewWebview(context, path.join(flowDir, 'index.js'));
+				v.show();
 			}
 		})
 	);
 }
 
-function isValidationEnabled(document: TextDocument) {
-	return true;
-}
 
-function loadConfiguration(context: ExtensionContext): void {
-	workspace.onDidSaveTextDocument(document => {
-		if (isValidationEnabled(document)) {
-			validateDocument(document);
-		}
-	}, null, context.subscriptions);
-	window.onDidChangeActiveTextEditor(editor => {
-		if (editor && editor.document && isValidationEnabled(editor.document)) {
-			validateDocument(editor.document);
-		}
-	}, null, context.subscriptions);
-
-	// remove markers on close
-	workspace.onDidCloseTextDocument(_document => {
-	}, null, context.subscriptions);
-
-	// workaround for onDidOpenTextDocument
-	// workspace.onDidOpenTextDocument(document => {
-	// 	console.log("onDidOpenTextDocument ", document.fileName);
-	// 	validateDocument(document);
-	// }, null, context.subscriptions);
-	validateAllDocuments();
-}
-
-function validateAllDocuments() {
-	// TODO: why doesn't this not work?
-	//workspace.textDocuments.forEach(each => validateDocument(each));
-
-	window.visibleTextEditors.forEach(each => {
-		if (each.document) {
-			validateDocument(each.document);
-		}
-	});
-}
-
-async function validateDocument(document: TextDocument) {
-	if (!isArkFBPAppByDocument(document)) {
-		return;
-	}
-
-	console.log('validateDocument... ', document.fileName);
-
-	try {
-		const doc = yaml.safeLoad(fs.readFileSync(document.fileName).toString());
-		console.log(doc);
-	} catch (e) {
-		console.log(e);
-	}
-}

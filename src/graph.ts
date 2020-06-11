@@ -142,16 +142,20 @@ export class GraphPreviewPanel {
 	}
 
 	private _getHtmlForWebview(webview: vscode.Webview,) {
-        // const styleCssUri = webview.asWebviewUri(vscode.Uri.file(
-        //     path.join(this._extensionPath, 'media', 'dist', 'css', 'app.c9873fb0.css')
-		// ));
+        const styleCssUri = webview.asWebviewUri(vscode.Uri.file(
+            path.join(this._extensionPath, 'dist', 'webviews', 'preview.css')
+		));
+
+		const styleCssUri2 = webview.asWebviewUri(vscode.Uri.file(
+            path.join(this._extensionPath, 'dist', 'webviews', 'main-styles.')
+		));
 
 		const scriptUri = webview.asWebviewUri(vscode.Uri.file(
-			path.join(this._extensionPath, 'media', 'dist', 'js', 'app.js')
+			path.join(this._extensionPath, 'dist', 'webviews', 'preview.js')
 		));
 
 		const script2Uri = webview.asWebviewUri(vscode.Uri.file(
-			path.join(this._extensionPath, 'media', 'dist', 'js', 'chunk-vendors.js')
+			path.join(this._extensionPath, 'dist', 'webviews', 'main-styles.js')
 		));
 
 		// Use a nonce to whitelist which scripts can be run

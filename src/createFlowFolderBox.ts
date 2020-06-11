@@ -4,7 +4,30 @@ import cp = require('child_process');
 import * as fs from 'fs';
 import * as path from 'path';
 
-export async function showCreateFlowFolderBox(root?: string) {
+export async function showCreateFlowFolderBox(label: string) {
+	const cwd = vscode.workspace.workspaceFolders![0].uri.path;
+	const result = await window.showInputBox({
+		value: `${label}`,
+		placeHolder: '填写新的名称',
+		validateInput: text => {
+			text = text.trim();
+			if (text.length === 0) {
+				return "无效的名称";
+			}
+
+			if (text.indexOf('/') >= 0) {
+				return '非法的名称';
+			}
+
+			return null;
+		}
+	});
+
+	return result;
+}
+
+
+export async function showRenameBox(root?: string) {
 	const cwd = vscode.workspace.workspaceFolders![0].uri.path;
 	const result = await window.showInputBox({
 		value: '',
