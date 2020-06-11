@@ -23,6 +23,7 @@ import * as arkfbp from './arkfbp';
 import { showCreateFlowFolderBox, showRenameBox } from './createFlowFolderBox';
 import { showCreateFlowBox } from './createFlowBox';
 import * as copydir from 'copy-dir';
+import * as box from './box';
 
 export class FlowsProvider
   implements TreeDataProvider<FlowTreeItem | FlowDirTreeItem> {
@@ -97,9 +98,12 @@ export class FlowsProvider
     this.refresh();
   }
 
-  run(item: FlowTreeItem): void {
+  async run(item: FlowTreeItem) {
     const flowName = item.reference;
-    arkfbp.runFlow(this.workspaceRoot, this.terminal, flowName);
+
+    const inputs = await box.showRunFlowInputsBox();
+    console.info(inputs);
+    arkfbp.runFlow(this.workspaceRoot, this.terminal, flowName, inputs.format, inputs.data);
   }
 
   getTreeItem(element: FlowTreeItem | FlowDirTreeItem): TreeItem {
