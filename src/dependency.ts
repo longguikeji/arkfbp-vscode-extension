@@ -55,6 +55,11 @@ import {
       ._onDidChangeTreeData.event;
 
     constructor(private readonly context:vscode.ExtensionContext, private readonly workspaceRoot: string) {
+      const pattern = path.join(workspaceRoot, 'package.json');
+      const fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
+      fileWatcher.onDidChange(() => {
+        this.refresh();
+      });
     }
 
     refresh(): void {
