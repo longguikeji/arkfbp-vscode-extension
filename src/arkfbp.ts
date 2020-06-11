@@ -442,7 +442,7 @@ export function findNodeFilesByClass(flowDirPath: string, classID: string): stri
 
 export function createNode(options: { flow: string, base: string, class: string, id: string }): boolean {
     const cwd = vscode.workspace.workspaceFolders![0].uri.path;
-    let stdout = cp.execFileSync('arkfbp-cli', ['createnode', '--flow', `${options.flow}`, '--base', `${options.base}`, '--class', `${options.class}`, '--id', `${options.id}`], {
+    let stdout = cp.execFileSync('arkfbp', ['createnode', '--flow', `${options.flow}`, '--base', `${options.base}`, '--class', `${options.class}`, '--id', `${options.id}`], {
         cwd: cwd,
     });
 
