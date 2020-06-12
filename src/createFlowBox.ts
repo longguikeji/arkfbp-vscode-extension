@@ -26,7 +26,7 @@ export async function showCreateFlowBox(root?: string) {
 		result = root + '.' + result;
 	}
 
-	let stdout = cp.execFileSync('arkfbp-cli', ['createflow', `${result}`], {
+	let stdout = cp.execFileSync('arkfbp', ['createflow', `${result}`], {
 		cwd: cwd,
 	});
 

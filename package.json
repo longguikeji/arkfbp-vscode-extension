@@ -51,7 +51,6 @@
           "dark": "resources/dark/icon-refresh.svg"
         }
       },
-
       {
         "command": "arkfbp.graph.preview",
         "title": "arkfbp: preview the flow graph",
@@ -307,8 +306,6 @@
           "when": "view == arkfbp.explorer.flowOutline",
           "group": "navigation@3"
         },
-
-
         {
           "command": "arkfbp.explorer.database.action.create",
           "when": "view == arkfbp.explorer.database",
