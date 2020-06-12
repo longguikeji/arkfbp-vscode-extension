@@ -405,7 +405,7 @@ export function runApp(workspaceRoot: string, terminal: vscode.Terminal) {
 
 export function runFlow(workspaceRoot: string, terminal: vscode.Terminal, flowName: string, format: string, data: string) {
     const cmd = 'node';
-    const args = ["./dist/cli.js", "run", "--name", `${flowName}`, "--inputs", format === 'JSON' ? `'${data}'` : data, "--inputs-format", format];
+    const args = ["./dist/cli.js", "run", "--verbose", "--name", `${flowName}`, "--inputs", format === 'JSON' ? `'${data}'` : data, "--inputs-format", format];
     runCommandInIntegratedTerminal(terminal, cmd, args, workspaceRoot);
 }
 
