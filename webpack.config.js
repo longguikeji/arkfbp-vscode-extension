@@ -30,7 +30,7 @@ module.exports = function (env, argv) {
     env.optimizeImages = true;
   }
 
-  return [getExtensionConfig(env), getWebviewsConfig(env)];
+  return [getExtensionConfig(env), getWebviewConfig(env)];
 };
 
 function getExtensionConfig(env) {
@@ -87,7 +87,7 @@ function getExtensionConfig(env) {
   };
 }
 
-function getWebviewsConfig(env) {
+function getWebviewConfig(env) {
 	const clean = ['**/*'];
 	if (env.optimizeImages) {
 		console.log('Optimizing images (src/webviews/apps/images/preview/*.png)...');
@@ -146,7 +146,7 @@ function getWebviewsConfig(env) {
 				  }
 				: false
 		}),
-		new HtmlExcludeAssetsPlugin(),
+		new HtmlExcludeAssetsPlugin(null),
 		new CspHtmlPlugin(),
 		new ImageminPlugin({
 			disable: !env.optimizeImages,
@@ -165,7 +165,7 @@ function getWebviewsConfig(env) {
 			},
 			svgo: null
 		}),
-		new HtmlInlineSourcePlugin(),
+		new HtmlInlineSourcePlugin(null),
 		new VueLoaderPlugin()
 	];
 

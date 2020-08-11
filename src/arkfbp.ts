@@ -304,6 +304,12 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
             if (prop.name.escapedText === 'next') {
                 p['next'] = prop.initializer.text;
             }
+            if (prop.name.escapedText === 'x') {
+                p['x'] = prop.initializer.text;
+            }
+            if (prop.name.escapedText === 'y') {
+                p['y'] = prop.initializer.text;
+            }
         }
 
         return p;
@@ -313,7 +319,6 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
 }
 
 export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode | null {
-    console.info('>>>getArkFBPGraphNodeFromFile', filePath);
     const content = fs.readFileSync(filePath).toString();
     const sfile = ts.createSourceFile(
         filePath,

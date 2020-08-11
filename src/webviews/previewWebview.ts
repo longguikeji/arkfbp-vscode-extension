@@ -90,10 +90,7 @@ export class PreviewWebview extends WebviewBase {
 		const editor = vscode.window.activeTextEditor;
 		const flowDir = path.dirname(this._graphFilePath);
 		let graphNodes = getArkFBPFlowGraphNodes(flowDir);
-		console.info(graphNodes);
-
 		let graphIndexNodes = getArkFBPGraphNodes(this._graphFilePath);
-		console.info(graphIndexNodes);
 
 		// Merge graphNodes & graphIndexNodes
 		graphIndexNodes.forEach((node: GraphNode) => {
@@ -102,7 +99,7 @@ export class PreviewWebview extends WebviewBase {
 				if (graphNode.name === node.cls) {
 					node.name = graphNode.name;
 					node.base = graphNode.base;
-					graphNodes = graphNodes.splice(i, 1);
+					graphNodes.splice(i, 1);
 					break;
 				} else {
 					node.base = node.cls;
@@ -110,6 +107,8 @@ export class PreviewWebview extends WebviewBase {
 				}
 			}
 		});
+
+		console.info(graphIndexNodes, 'graphIndexNodes')
 
 		const state: PreviewState = {
 			graphNodes: graphIndexNodes

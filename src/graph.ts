@@ -20,10 +20,7 @@ export class GraphPreviewPanel {
 		const editor = vscode.window.activeTextEditor;
 		const flowDir = path.dirname(graphFilePath);
 		let graphNodes = getArkFBPFlowGraphNodes(flowDir);
-		console.info(graphNodes);
-
 		let graphIndexNodes = getArkFBPGraphNodes(graphFilePath);
-		console.info(graphIndexNodes);
 
 		// Merge graphNodes & graphIndexNodes
 		graphIndexNodes.forEach((node: GraphNode) => {
@@ -32,7 +29,7 @@ export class GraphPreviewPanel {
 				if (graphNode.name === node.cls) {
 					node.name = graphNode.name;
 					node.base = graphNode.base;
-					graphNodes = graphNodes.splice(i, 1);
+					graphNodes.splice(i, 1);
 					break;
 				} else {
 					node.base = node.cls;
