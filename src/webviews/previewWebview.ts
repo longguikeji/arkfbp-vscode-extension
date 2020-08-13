@@ -111,7 +111,8 @@ export class PreviewWebview extends WebviewBase {
 		console.info(graphIndexNodes, 'graphIndexNodes')
 
 		const state: PreviewState = {
-			graphNodes: graphIndexNodes
+			graphNodes: graphIndexNodes,
+			filePath: flowDir,
 		};
 		return `<script type="text/javascript" nonce="Z2l0bGVucy1ib290c3RyYXA=">window.state = ${JSON.stringify(
 			state

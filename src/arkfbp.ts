@@ -464,7 +464,6 @@ export function updateFlowGraph(flow: string, node: {
     const graphFilePath = getGraphFile(flow);
     const nodes = getArkFBPGraphNodes(graphFilePath);
     nodes.push(node);
-    console.info(nodes);
 
     const code = fs.readFileSync(graphFilePath).toString();
     const result = babel.transform(code, {
@@ -498,8 +497,10 @@ export function updateFlowGraph(flow: string, node: {
                         const arrayExpression = returnStatement.argument as babelTypes.ArrayExpression;
                         const o1 = babelTypes.objectProperty(babelTypes.identifier('cls'), babelTypes.identifier(node.cls));
                         const o2 = babelTypes.objectProperty(babelTypes.identifier('id'), babelTypes.stringLiteral(node.id));
+                        const o3 = babelTypes.objectProperty(babelTypes.identifier('x'), babelTypes.numericLiteral(30));
+                        const o4 = babelTypes.objectProperty(babelTypes.identifier('y'), babelTypes.numericLiteral(30));
                         arrayExpression.elements.push(
-                            babelTypes.objectExpression([o1, o2])
+                            babelTypes.objectExpression([o1, o2, o3, o4])
                         );
                     }
                 }

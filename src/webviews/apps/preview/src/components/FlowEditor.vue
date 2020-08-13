@@ -64,7 +64,7 @@ export default class FlowEditor extends Vue {
     this.fitToContainer(canvas);
 
     this.editor = new Editor("c", {
-      onNodeSelected: (id: number) => {
+      onNodeSelected: (id: string) => {
         const node = this.workflow.getNodeById(id);
         const selectedNode = (this.selected as any).node
           ? (this.selected as any).node
@@ -77,11 +77,11 @@ export default class FlowEditor extends Vue {
       onEdgeSelected: (from: Node, to: Node) => {
         this.selected = { edge: { from, to } };
       },
-      onNodeMoving: (id: number, x: number, y: number) => {
+      onNodeMoving: (id: string, x: number, y: number) => {
         const node = this.workflow.getNodeById(id);
         this.debounceMoveNode({ node, x, y });
       },
-      onConnect: (fromId: number, toId: number) => {
+      onConnect: (fromId: string, toId: string) => {
         const from = this.workflow.getNodeById(fromId);
         const to = this.workflow.getNodeById(toId);
         if (from != null && to != null) {
@@ -109,7 +109,7 @@ export default class FlowEditor extends Vue {
           position: [left, top]
         } = node;
         const graphNode = editor.createNode({
-          id,
+          id: id as any,
           type: type as any, // TODO: 统一两个NodeType
           left,
           top,

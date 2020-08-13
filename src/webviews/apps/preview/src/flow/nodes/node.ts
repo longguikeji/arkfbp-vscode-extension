@@ -2,7 +2,7 @@ import { Inputs } from './inputs'
 import { Outputs } from './outputs'
 import { getCodeFromNode, getNodeFromCode } from './helper'
 
-export type NodeID = number
+export type NodeID = string
 
 export const enum NodeType {
     NOP = 'NOP',

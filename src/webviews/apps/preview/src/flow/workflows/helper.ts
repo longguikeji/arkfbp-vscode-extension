@@ -1,7 +1,7 @@
-import dedent from 'dedent'
 import * as t from '@babel/types'
-import template from 'babel-template'
 import generate from 'babel-generator'
+import dedent = require('dedent')
+import template = require('babel-template')
 
 import {Workflow} from '.'
 import {
