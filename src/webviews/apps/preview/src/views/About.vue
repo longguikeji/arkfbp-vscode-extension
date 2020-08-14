@@ -16,7 +16,6 @@ import {
   NopNode,
   Node,
 } from "./../flow/nodes";
-import { updateFile } from "./../apis/file";
 
 @Component({
   components: {
@@ -24,7 +23,6 @@ import { updateFile } from "./../apis/file";
 })
 export default class About extends Vue {
   private workflow: Workflow|null = null
-  private filePath: string|null = null
 
   get flowEditor() {
     return {render: h => h('FlowEditor', {
@@ -40,12 +38,10 @@ export default class About extends Vue {
     })}
   }
 
-  flowMoveNode(node: Node, x: number, y: number) {
-    console.info(node, x, y)
-    updateFile(this.filePath, {
-      id: node.id,
-      cls: node.cls,
-      filename: node.fileName,
+  flowMoveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
+    const vscode = (window as any).state.acquireVsCodeApi;
+    vscode.postMessage({
+       
     })
   }
 
@@ -62,6 +58,7 @@ export default class About extends Vue {
   }
 
   mounted() {
+    console.info(window, 'window')
     const nodes = (window as any).state.graphNodes;
 
     const nodeTree = new NodeTree("/");
@@ -72,26 +69,31 @@ export default class About extends Vue {
       switch (nodes[i].base) {
         case 'APINode':
           const apiNode = new APINode(nodes[i].id, `${nodes[i].cls}.js`)
+          apiNode.cls = nodes[i].cls
           apiNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
           nodeTree.add(apiNode, nodeTree);
           break;
         case 'StartNode':
           const startNode = new StartNode(nodes[i].id, `${nodes[i].cls}.js`)
+          startNode.cls = nodes[i].cls
           startNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
           nodeTree.add(startNode, nodeTree);
           break;
         case 'StopNode':
           const stopNode = new StopNode(nodes[i].id, `${nodes[i].cls}.js`)
+          stopNode.cls = nodes[i].cls
           stopNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
           nodeTree.add(stopNode, nodeTree);
           break;
         case 'FunctionNode':
           const functionNode = new FunctionNode(nodes[i].id, `${nodes[i].cls}.js`)
+          functionNode.cls = nodes[i].cls
           functionNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
           nodeTree.add(functionNode, nodeTree);
           break;
         case 'NopNode':
           const nopNode = new NopNode(nodes[i].id, `${nodes[i].cls}.js`)
+          nopNode.cls = nodes[i].cls
           nopNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
           nodeTree.add(nopNode, nodeTree);
           break;
@@ -105,15 +107,9 @@ export default class About extends Vue {
       }
     }
 
-    console.info(1, nodes)
-    console.info(2, nodeTree)
-    console.info(3, edges)
-    console.info(4, (window as any).state.filePath)
-
     const wf = new Workflow("wf", "wf", nodeTree, edges);
 
     this.workflow = wf;
-    this.filePath = (window as any).state.filePath;
   }
 }
 </script>

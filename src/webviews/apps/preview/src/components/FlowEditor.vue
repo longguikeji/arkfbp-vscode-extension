@@ -21,7 +21,7 @@ export default class FlowEditor extends Vue {
   @Prop({ type: Object, required: true }) workflow!: Workflow;
 
   @Emit("moveNode")
-  moveNode(payload: { node: Node; x: number; y: number }) {
+  moveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
     return payload;
   }
 
@@ -79,7 +79,7 @@ export default class FlowEditor extends Vue {
       },
       onNodeMoving: (id: string, x: number, y: number) => {
         const node = this.workflow.getNodeById(id);
-        this.debounceMoveNode({ node, x, y });
+        this.debounceMoveNode({ workflow: this.workflow , node, x, y });
       },
       onConnect: (fromId: string, toId: string) => {
         const from = this.workflow.getNodeById(fromId);

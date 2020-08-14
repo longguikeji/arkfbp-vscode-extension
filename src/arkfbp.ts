@@ -198,6 +198,8 @@ export interface GraphNode {
 
     cls?: string;
     id?: string;
+    x?: number;
+    y?: number;
     next?: string;
     name?: string;
     base?: string;
@@ -291,6 +293,8 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
         const p: GraphNode = {
             pos: element.pos,
             end: element.end,
+            x: 30,
+            y: 30,
         };
 
         for (let i = 0; i < element.properties.length; ++i) {

@@ -116,6 +116,6 @@ export class PreviewWebview extends WebviewBase {
 		};
 		return `<script type="text/javascript" nonce="Z2l0bGVucy1ib290c3RyYXA=">window.state = ${JSON.stringify(
 			state
-		)};</script>`;
+		)}; window.acquireVsCodeApi = acquireVsCodeApi();</script>`;
 	}
 }
