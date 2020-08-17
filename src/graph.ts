@@ -62,8 +62,8 @@ export class GraphPreviewPanel {
 			}
 		);
 
-        GraphPreviewPanel.currentPanel = new GraphPreviewPanel(panel, extensionPath);
-        GraphPreviewPanel.currentPanel.render(graphIndexNodes);
+		GraphPreviewPanel.currentPanel = new GraphPreviewPanel(panel, extensionPath);
+		GraphPreviewPanel.currentPanel.render(graphIndexNodes);
 	}
 
 	public static revive(panel: vscode.WebviewPanel, extensionPath: string) {
@@ -103,14 +103,14 @@ export class GraphPreviewPanel {
 			},
 			null,
 			this._disposables
-        );
+    );
 	}
 
 	public render(graphNodes: GraphNode[]) {
 		// Send a message to the webview webview.
 		// You can send any JSON serializable data.
 		console.info('render:', graphNodes);
-		this._panel.webview.postMessage({ command: 'render', nodes:  graphNodes});
+		this._panel.webview.postMessage({ command: 'render', nodes: graphNodes});
 	}
 
 	public dispose() {

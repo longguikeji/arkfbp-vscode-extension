@@ -24,6 +24,10 @@ import {
 export default class About extends Vue {
   private workflow: Workflow|null = null
 
+  get vscode() {
+    return (window as any).acquireVsCodeApi
+  }
+
   get flowEditor() {
     return {render: h => h('FlowEditor', {
         props: {
@@ -39,14 +43,33 @@ export default class About extends Vue {
   }
 
   flowMoveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
-    const vscode = (window as any).state.acquireVsCodeApi;
-    vscode.postMessage({
-       
+    const edge = payload.workflow.edges.find((item: Edge) => item[0] === payload.node.id)
+    debugger
+    this.vscode.postMessage({
+      command: 'moveNode',
+      node: {
+        id: payload.node.id,
+        cls: payload.node.cls,
+        filename: payload.node.fileName,
+        x: payload.x,
+        y: payload.y,
+        next: edge ? edge[1] : null
+      }
     })
   }
 
-  flowAddEdge() {
-
+  flowAddEdge(payload: { from: Node; to: Node }) {
+    this.vscode.postMessage({
+      command: 'addEdge',
+      node: {
+        id: payload.from.id,
+        cls: payload.from.cls,
+        filename: payload.from.fileName,
+        x: payload.from.position[0],
+        y: payload.from.position[1],
+        next: payload.to.id,
+      }
+    })
   }
 
   flowSelectNode() {
@@ -58,7 +81,6 @@ export default class About extends Vue {
   }
 
   mounted() {
-    console.info(window, 'window')
     const nodes = (window as any).state.graphNodes;
 
     const nodeTree = new NodeTree("/");
