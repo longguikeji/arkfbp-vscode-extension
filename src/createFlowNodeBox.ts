@@ -61,10 +61,16 @@ export async function showCreateFlowNodeBox(flowReference?: string) {
 		window.showErrorMessage(`新节点${className}创建失败`);
 	}
 
-	arkfbp.updateFlowGraph(flowName, {
+	const graphFilePath = arkfbp.getGraphFile(flowName);
+
+	console.info(graphFilePath, 'graphFilePath')
+
+	arkfbp.updateFlowGraph('createNode', graphFilePath, {
 		cls: className,
 		id: nodeID,
 		filename: filename,
+		x: 30,
+		y: 30,
 	});
 
 	window.showInformationMessage(`新节点${className}创建成功`);

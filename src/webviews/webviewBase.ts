@@ -21,6 +21,7 @@ import {
 	UpdateConfigurationCommandType
 } from './protocol';
 import { ExtensionContext } from 'vscode';
+import { updateFlowGraph } from './../arkfbp';
 // import { Commands } from '../commands';
 
 let ipcSequence = 0;
@@ -157,7 +158,7 @@ export abstract class WebviewBase implements Disposable {
 		this._panel.title = title;
 	}
 
-	async show(column: ViewColumn = ViewColumn.Active): Promise<void> {
+	async show(graphFilePath: string, column: ViewColumn = ViewColumn.Active): Promise<void> {
 		const html = await this.getHtml();
 
 		if (this._panel === undefined) {
@@ -183,10 +184,13 @@ export abstract class WebviewBase implements Disposable {
 			);
 
 			this._panel.webview.html = html;
+
+			this.getMessage(graphFilePath);
 		} else {
 			// Reset the html to get the webview to reload
 			this._panel.webview.html = '';
 			this._panel.webview.html = html;
+			this.getMessage(graphFilePath);
 			this._panel.reveal(this._panel.viewColumn || ViewColumn.Active, false);
 		}
 	}
@@ -265,5 +269,23 @@ export abstract class WebviewBase implements Disposable {
 		}
 
 		return this._panel.webview.postMessage(message);
+	}
+	
+	// Handle messages from the webview
+	private getMessage(graphFilePath: string) {
+		this._panel.webview.onDidReceiveMessage( 
+			message => {
+				switch (message.command) {
+					case 'moveNode':
+						updateFlowGraph('moveNode', graphFilePath, message.node);
+						return;
+					case 'addEdge':
+						updateFlowGraph('addEdge', graphFilePath, message.node);
+						return;
+				}
+			},
+			null,
+			[]
+		);
 	}
 }

@@ -75,7 +75,7 @@ export function inspectFlowCode(code: string) {
     const nextProperty = properties.find(p => p.key.name === 'next' && (t.isArrayExpression(p.value) || t.isLiteral(p.value))) as t.ObjectProperty
 
     const cls = (clsProperty!.value as t.Identifier).name as string
-    const id = (idProperty!.value as t.NumericLiteral).value as number
+    const id = (idProperty!.value as t.Identifier).name as string
     const x = xProperty ? (xProperty!.value as t.NumericLiteral).value as number : 0
     const y = yProperty ? (yProperty!.value as t.NumericLiteral).value as number : 0
     const positiveNext = positiveNextProperty ? (positiveNextProperty!.value as t.NumericLiteral).value as number : null
@@ -103,14 +103,14 @@ export function inspectFlowCode(code: string) {
 
   const edges = nodes.reduce((memo: Edges, node) => {
     if (node.next.length > 0) {
-      const l = node.next.map(id => [node.id, id] as [number, number])
+      const l = node.next.map(id => [node.id, id.toString()]) as Edges
       memo.push(...l)
     }
     if (node.positiveNext) {
-      memo.push([node.id, node.positiveNext, 'positive'])
+      memo.push([node.id, node.positiveNext.toString(), 'positive'])
     }
     if (node.negativeNext) {
-      memo.push([node.id, node.negativeNext, 'negative'])
+      memo.push([node.id, node.negativeNext.toString(), 'negative'])
     }
     return memo
   }, [])

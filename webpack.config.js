@@ -146,7 +146,7 @@ function getWebviewsConfig(env) {
 				  }
 				: false
 		}),
-		new HtmlExcludeAssetsPlugin(),
+		new HtmlExcludeAssetsPlugin(null),
 		new CspHtmlPlugin(),
 		new ImageminPlugin({
 			disable: !env.optimizeImages,
@@ -165,7 +165,7 @@ function getWebviewsConfig(env) {
 			},
 			svgo: null
 		}),
-		new HtmlInlineSourcePlugin(),
+		new HtmlInlineSourcePlugin(null),
 		new VueLoaderPlugin()
 	];
 

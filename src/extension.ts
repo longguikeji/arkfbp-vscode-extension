@@ -296,12 +296,10 @@ export async function activate(context: ExtensionContext) {
 
 			const flowDir = getArkFBPFlowDirByDocument(editor.document);
 			if (flowDir !== '') {
-				//GraphPreviewPanel.createOrShow(context.extensionPath, );
+				// GraphPreviewPanel.createOrShow(context.extensionPath, path.join(flowDir, 'index.js'));
 				const v = new PreviewWebview(context, path.join(flowDir, 'index.js'));
-				v.show();
+				v.show(path.join(flowDir, 'index.js'));
 			}
 		})
 	);
 }
-
-

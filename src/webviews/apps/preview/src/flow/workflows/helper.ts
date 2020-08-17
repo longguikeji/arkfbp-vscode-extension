@@ -1,7 +1,9 @@
-import dedent from 'dedent'
 import * as t from '@babel/types'
-import template from 'babel-template'
 import generate from 'babel-generator'
+// import template from 'babel-template'
+// import dedent from 'dedent'
+import dedent = require('dedent')
+import template = require('babel-template')
 
 import {Workflow} from '.'
 import {
@@ -14,7 +16,7 @@ import {
 import {inspectFlowCode} from './../../flow/utils/inspect'
 
 export function getCodeFromFlow(flow: Workflow) {
-
+  debugger
   const nodes = flow.tree!.nodes.map(node => {
     const edges = flow.edges
       .filter(([from]) => from === node.id)
@@ -23,8 +25,9 @@ export function getCodeFromFlow(flow: Workflow) {
       const edge = edges.find(([from, to, type]) => type === tt)
       return edge ? edge[1] : null
     }
+
     const getNext = () => {
-      const l: number[] = edges.filter(([from, to, type]) => !type).map(([from, to]) => to)
+      const l: string[] = edges.filter(([from, to, type]) => !type).map(([from, to]) => to)
       return l.length === 0 ? null
           : l.length === 1 ? l[0]
           : l
@@ -47,13 +50,18 @@ export function getCodeFromFlow(flow: Workflow) {
 
     return objectExpression
   })
-
+  debugger
   const mainExpressionStatement = template(dedent`
     export class Main extends Flow {
+
+      createNodes() {
+            return VALUE
+        }
+
         createGraph() {
             const g = new Graph()
 
-            g.nodes = VALUE;
+            g.nodes = this.createNodes();
 
             return g
         }
@@ -61,7 +69,7 @@ export function getCodeFromFlow(flow: Workflow) {
   `, {sourceType: 'module'})({
     VALUE: t.arrayExpression(nodes),
   } as any) as any as t.ExpressionStatement
-
+  debugger
   const defaultImportDeclarationList = template(`
     import { Flow } from 'arkfbp/lib/flow'
     import { Graph } from 'arkfbp/lib/graph'
@@ -80,7 +88,7 @@ export function getCodeFromFlow(flow: Workflow) {
     ...nodeImportDeclarationList,
     mainExpressionStatement,
   ]) as any
-
+  debugger
   return generate(program).code
 }
 
