@@ -16,7 +16,6 @@ import {
 import {inspectFlowCode} from './../../flow/utils/inspect'
 
 export function getCodeFromFlow(flow: Workflow) {
-  debugger
   const nodes = flow.tree!.nodes.map(node => {
     const edges = flow.edges
       .filter(([from]) => from === node.id)
@@ -50,7 +49,7 @@ export function getCodeFromFlow(flow: Workflow) {
 
     return objectExpression
   })
-  debugger
+
   const mainExpressionStatement = template(dedent`
     export class Main extends Flow {
 
@@ -69,7 +68,7 @@ export function getCodeFromFlow(flow: Workflow) {
   `, {sourceType: 'module'})({
     VALUE: t.arrayExpression(nodes),
   } as any) as any as t.ExpressionStatement
-  debugger
+
   const defaultImportDeclarationList = template(`
     import { Flow } from 'arkfbp/lib/flow'
     import { Graph } from 'arkfbp/lib/graph'
@@ -88,7 +87,7 @@ export function getCodeFromFlow(flow: Workflow) {
     ...nodeImportDeclarationList,
     mainExpressionStatement,
   ]) as any
-  debugger
+
   return generate(program).code
 }
 

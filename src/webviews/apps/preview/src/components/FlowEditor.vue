@@ -147,7 +147,6 @@ export default class FlowEditor extends Vue {
 
 <style scoped lang="less">
 .flow-editor {
-  position: relative;
   width: 100%;
   height: 100%;
   text-align: left;

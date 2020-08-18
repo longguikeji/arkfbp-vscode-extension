@@ -1,5 +1,6 @@
 <template>
   <div class="about">
+    <component v-if="workflow" :is="flowTool" />
     <component v-if="workflow" :is="flowEditor" />
   </div>
 </template>
@@ -42,9 +43,22 @@ export default class About extends Vue {
     })}
   }
 
+  get flowTool() {
+    return {render: h => h('FlowTool', {
+        props: {
+            workflow: this.workflow,
+        },
+        on: {
+            moveNode: this.flowMoveNode,
+            addEdge: this.flowAddEdge,
+            selectNode: this.flowSelectNode,
+            remove: this.flowRemoveSelected,
+        },
+    })}
+  }
+
   flowMoveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
     const edge = payload.workflow.edges.find((item: Edge) => item[0] === payload.node.id)
-    debugger
     this.vscode.postMessage({
       command: 'moveNode',
       node: {
@@ -87,7 +101,6 @@ export default class About extends Vue {
     const edges: Edge[] = [];
 
     for (let i = 0; i < nodes.length; ++i) {
-      console.info(i);
       switch (nodes[i].base) {
         case 'APINode':
           const apiNode = new APINode(nodes[i].id, `${nodes[i].cls}.js`)
@@ -135,3 +148,9 @@ export default class About extends Vue {
   }
 }
 </script>
+
+<style scoped lang="less">
+.about {
+  position: relative;
+}
+</style>
