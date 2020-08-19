@@ -4,22 +4,14 @@
       <div class="tools-left">
       </div>
       <div class="tools-middle">
-        <div class="tool-item"><div @click="addNodeApi">API</div></div>
-        <div class="tool-item"><div @click="addNodeFunction">FN</div></div>
-        <div class="tool-item"><div @click="addNodeIf">IF</div></div>
-        <div>
-          <div class="tool-item" @click="isShowDb = !isShowDb" >DB</div>
-          <div class="tool-item-db" v-if="isShowDb">
-            <div class="db-type" v-for="item in dbOperationType" :key="item">
-              <a @click="addNodeDb(item)">{{item}}</a>
-            </div>
-          </div>
-        </div>
-        <div class="tool-item"><div @click="addNodeWorkflow">WF</div></div>
-        <div class="tool-item"><div @click="addNodeWait">WAIT</div></div>
-        <div class="tool-item"><div @click="addNodeEvent">EVENT</div></div>
-        <div class="tool-item"><div @click="addNodeClock">CLOCK</div></div>
-        <div class="tool-item"><div @click="addNodeStop">STOP</div></div>
+        <div class="tool-item"><div @click="createNodeApi">API</div></div>
+        <div class="tool-item"><div @click="createNodeFunction">FN</div></div>
+        <div class="tool-item"><div @click="createNodeIf">IF</div></div>
+        <div class="tool-item"><div @click="createNodeWorkflow">WF</div></div>
+        <div class="tool-item"><div @click="createNodeWait">WAIT</div></div>
+        <div class="tool-item"><div @click="createNodeEvent">EVENT</div></div>
+        <div class="tool-item"><div @click="createNodeClock">CLOCK</div></div>
+        <div class="tool-item"><div @click="createNodeStop">STOP</div></div>
       </div>
       <div class="tools-right">
         <div class="tool-item"><div>COPY</div></div>
@@ -42,25 +34,20 @@ import {Workflow} from '../flow/workflows'
 export default class FlowTool extends Vue {
   private isShowDb: boolean = false  
 
-  @Emit('addNode') addNode(payload: {type: NodeType, operationType?: string}) {return payload}
+  @Emit('createNode') createNode(payload: {type: NodeType, operationType?: string}) {return payload}
 
   get iconStyles() {
     return {width: '36px', height: '20px'}
   }
 
-  get dbOperationType() {
-    return ['Query', 'QueryAll', 'Insert', 'Delete', 'Update']
-  }
-
-  addNodeApi() {this.addNode({type: NodeType.API})}
-  addNodeFunction() {this.addNode({type: NodeType.Function})}
-  addNodeIf() {this.addNode({type: NodeType.IF})}
-  addNodeDb(dbOperationType) {this.addNode({type: NodeType.DB, operationType: dbOperationType})}
-  addNodeWorkflow() {this.addNode({type: NodeType.TriggerWorkflow})}
-  addNodeWait() {this.addNode({type: NodeType.WaitEvent})}
-  addNodeEvent() {this.addNode({type: NodeType.TriggerEvent})}
-  addNodeClock() {this.addNode({type: NodeType.Clock})}
-  addNodeStop() {this.addNode({type: NodeType.Stop})}
+  createNodeApi() {this.createNode({type: NodeType.API})}
+  createNodeFunction() {this.createNode({type: NodeType.Function})}
+  createNodeIf() {this.createNode({type: NodeType.IF})}
+  createNodeWorkflow() {this.createNode({type: NodeType.TriggerWorkflow})}
+  createNodeWait() {this.createNode({type: NodeType.WaitEvent})}
+  createNodeEvent() {this.createNode({type: NodeType.TriggerEvent})}
+  createNodeClock() {this.createNode({type: NodeType.Clock})}
+  createNodeStop() {this.createNode({type: NodeType.Stop})}
 
   removeSelected() {
     this.$root.$emit('removeFlowEditorSelected')

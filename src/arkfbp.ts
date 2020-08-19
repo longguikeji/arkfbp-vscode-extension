@@ -370,10 +370,14 @@ export function getFlowPath(flow: string): string {
     return flow.replace(/\./g, '/');
 }
 
-export function getGraphFile(flow: string): string {
+export function getGraphFilePath(flow: string): string {
     const flowPath = getFlowPath(flow);
     const flowRootDirPath = getArkFBPFlowRootDir(getArkFBPAppDir());
     return path.join(flowRootDirPath, flowPath, 'index.js');
+}
+
+export function getFlowReference(graphFilePath: string): string {
+    return graphFilePath.split('/').slice(-4, -1).join('.')
 }
 
 /**
@@ -480,7 +484,7 @@ export function updateFlowGraph(type: string, graphFilePath: string, node: {
                 return [myImportInjector, myNodesInjector]
             case 'moveNode':
                 return [myNodesInjector]
-            case 'addEdge':
+            case 'createEdge':
                 return [myNodesInjector]
             default:
                 break
@@ -536,7 +540,7 @@ export function updateFlowGraph(type: string, graphFilePath: string, node: {
                                     }
                                 })
                                 break;
-                            case 'addEdge':
+                            case 'createEdge':
                                 arrayExpression.elements = arrayExpression.elements.map((item: babelTypes.ObjectExpression) => {
                                     if(((item.properties.find((e: babelTypes.ObjectProperty) => e.key.name === 'id') as babelTypes.ObjectProperty).value as babelTypes.StringLiteral).value === node.id) {
                                         return babelTypes.objectExpression([o1, o2, o3, o4, o5])

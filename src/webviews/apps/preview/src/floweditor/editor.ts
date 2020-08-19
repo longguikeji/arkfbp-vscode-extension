@@ -1,4 +1,5 @@
-declare var fabric: any
+import 'fabric'
+declare let fabric: any
 
 import {
     Node,
@@ -24,7 +25,6 @@ import {
     updateEdgeXY,
 } from './edge'
 
-
 export class Editor {
 
     private _id = 0
@@ -45,16 +45,15 @@ export class Editor {
         this._canvas = new fabric.Canvas(canvasID, {
             selection: true,
         })
-
         this.registerCanvasEvents()
         fabric.Object.prototype.originX = 'left'
         fabric.Object.prototype.originY = 'top'
         this._id = 0
 
-        this.onNodeSelected = options.onNodeSelected || (() => { })
-        this.onEdgeSelected = options.onEdgeSelected || (() => { })
-        this.onNodeMoving = options.onNodeMoving || (() => { })
-        this.onConnect = options.onConnect || (() => { })
+        this.onNodeSelected = options.onNodeSelected || (() => {})
+        this.onEdgeSelected = options.onEdgeSelected || (() => {})
+        this.onNodeMoving = options.onNodeMoving || (() => {})
+        this.onConnect = options.onConnect || (() => {})
     }
 
     clear() {
@@ -150,7 +149,7 @@ export class Editor {
         this.addToCanvas(node as any)
     }
 
-    createNode(options: { id?: number, type: NodeType, left: number, top: number }): Node | null {
+    createNode(options: { id?: string, type: NodeType, left: number, top: number }): Node | null {
         const { type, left, top } = options
         const id = options.id || this.getNextId()
 
@@ -189,6 +188,7 @@ export class Editor {
         if (node) {
             this.addToCanvas(node as any)
         }
+
         return node
     }
 
@@ -202,9 +202,9 @@ export class Editor {
         return dataURL
     }
 
-    private getNextId(): number {
+    private getNextId(): string {
         this._id += 1
-        return this._id
+        return this._id.toString()
     }
 
     private addToCanvas(o: fabric.Object) {
@@ -532,7 +532,7 @@ export class Editor {
                 this.newEdge,
                 this.newEdge.startCoord[0], this.newEdge.startCoord[1],
                 tx, ty,
-                50, 50)
+            50, 50)
         }
     }
 

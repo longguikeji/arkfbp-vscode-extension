@@ -10,6 +10,7 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { Workflow, Edge } from "./../flow/workflows/";
 import { NodeTree } from "./../flow/nodes/nodeTree";
 import {
+  NodeType,
   StartNode,
   StopNode,
   APINode,
@@ -17,6 +18,7 @@ import {
   NopNode,
   Node,
 } from "./../flow/nodes";
+import { OperationType } from './../flow/nodes/dbNode'
 
 @Component({
   components: {
@@ -36,7 +38,7 @@ export default class About extends Vue {
         },
         on: {
             moveNode: this.flowMoveNode,
-            addEdge: this.flowAddEdge,
+            createEdge: this.flowCreateEdge,
             selectNode: this.flowSelectNode,
             remove: this.flowRemoveSelected,
         },
@@ -49,12 +51,18 @@ export default class About extends Vue {
             workflow: this.workflow,
         },
         on: {
-            moveNode: this.flowMoveNode,
-            addEdge: this.flowAddEdge,
-            selectNode: this.flowSelectNode,
-            remove: this.flowRemoveSelected,
+            createNode: this.flowCreateNode,
         },
     })}
+  }
+
+  flowCreateNode(payload: {type: NodeType}) {
+    this.vscode.postMessage({
+      command: 'createNode',
+      node: {
+        type: payload.type,
+      }
+    })
   }
 
   flowMoveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
@@ -72,9 +80,9 @@ export default class About extends Vue {
     })
   }
 
-  flowAddEdge(payload: { from: Node; to: Node }) {
+  flowCreateEdge(payload: { from: Node; to: Node }) {
     this.vscode.postMessage({
-      command: 'addEdge',
+      command: 'createEdge',
       node: {
         id: payload.from.id,
         cls: payload.from.cls,

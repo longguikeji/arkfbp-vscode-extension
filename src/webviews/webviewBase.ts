@@ -21,7 +21,8 @@ import {
 	UpdateConfigurationCommandType
 } from './protocol';
 import { ExtensionContext } from 'vscode';
-import { updateFlowGraph } from './../arkfbp';
+import { getFlowReference, updateFlowGraph } from './../arkfbp';
+import { showCreateFlowNodeBox } from './../createFlowNodeBox'
 // import { Commands } from '../commands';
 
 let ipcSequence = 0;
@@ -274,13 +275,18 @@ export abstract class WebviewBase implements Disposable {
 	// Handle messages from the webview
 	private getMessage(graphFilePath: string) {
 		this._panel.webview.onDidReceiveMessage( 
-			message => {
+			 async (message) => {
 				switch (message.command) {
+					case 'createNode':
+						const flowReference = getFlowReference(graphFilePath)
+						await showCreateFlowNodeBox(flowReference, message.node)
+						this.show(graphFilePath)
+						return;
 					case 'moveNode':
 						updateFlowGraph('moveNode', graphFilePath, message.node);
 						return;
-					case 'addEdge':
-						updateFlowGraph('addEdge', graphFilePath, message.node);
+					case 'createEdge':
+						updateFlowGraph('createEdge', graphFilePath, message.node);
 						return;
 				}
 			},
