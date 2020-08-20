@@ -1,6 +1,5 @@
 <template>
   <div class="about">
-    <component v-if="workflow" :is="flowTool" />
     <component v-if="workflow" :is="flowEditor" />
   </div>
 </template>
@@ -19,6 +18,7 @@ import {
   Node,
 } from "./../flow/nodes";
 import { OperationType } from './../flow/nodes/dbNode'
+import { Edge } from "../floweditor/edge";
 
 @Component({
   components: {
@@ -26,6 +26,7 @@ import { OperationType } from './../flow/nodes/dbNode'
 })
 export default class About extends Vue {
   private workflow: Workflow|null = null
+  private node: Node|null = null
 
   get vscode() {
     return (window as any).acquireVsCodeApi
@@ -37,21 +38,10 @@ export default class About extends Vue {
             workflow: this.workflow,
         },
         on: {
+            createNode: this.flowCreateNode,
             moveNode: this.flowMoveNode,
             createEdge: this.flowCreateEdge,
-            selectNode: this.flowSelectNode,
-            remove: this.flowRemoveSelected,
-        },
-    })}
-  }
-
-  get flowTool() {
-    return {render: h => h('FlowTool', {
-        props: {
-            workflow: this.workflow,
-        },
-        on: {
-            createNode: this.flowCreateNode,
+            removeSelected: this.flowRemoveSelected,
         },
     })}
   }
@@ -94,12 +84,26 @@ export default class About extends Vue {
     })
   }
 
-  flowSelectNode() {
-
-  }
-
-  flowRemoveSelected() {
-
+  flowRemoveSelected(payload: Node | [Node, Node]) {
+    if(Array.isArray(payload)) {
+      this.vscode.postMessage({
+        command: 'removeEdge',
+        node: {
+          id: payload[0].id,
+          cls: payload[0].cls,
+          filename: payload[0].fileName,
+          x: payload[0].position[0],
+          y: payload[0].position[1],
+        }
+      })
+    }else {
+      this.vscode.postMessage({
+        command: 'removeNode',
+        node: {
+          id: payload.id,
+        }
+      })
+    }
   }
 
   mounted() {
@@ -158,7 +162,4 @@ export default class About extends Vue {
 </script>
 
 <style scoped lang="less">
-.about {
-  position: relative;
-}
 </style>

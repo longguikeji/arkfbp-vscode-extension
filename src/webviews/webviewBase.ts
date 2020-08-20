@@ -288,6 +288,12 @@ export abstract class WebviewBase implements Disposable {
 					case 'createEdge':
 						updateFlowGraph('createEdge', graphFilePath, message.node);
 						return;
+					case 'removeNode':
+						updateFlowGraph('removeNode', graphFilePath, message.node);
+						return;
+					case 'removeEdge':
+						updateFlowGraph('removeEdge', graphFilePath, message.node);
+						return;
 				}
 			},
 			null,

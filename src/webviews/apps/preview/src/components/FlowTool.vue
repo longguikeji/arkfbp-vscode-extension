@@ -14,7 +14,7 @@
         <div class="tool-item"><div @click="createNodeStop">STOP</div></div>
       </div>
       <div class="tools-right">
-        <div class="tool-item"><div>COPY</div></div>
+        <!-- <div class="tool-item"><div>COPY</div></div> -->
         <div class="tool-item"><div @click="removeSelected">DELETE</div></div>
       </div>
     </div>
@@ -32,9 +32,8 @@ import {Workflow} from '../flow/workflows'
 })
 
 export default class FlowTool extends Vue {
-  private isShowDb: boolean = false  
-
-  @Emit('createNode') createNode(payload: {type: NodeType, operationType?: string}) {return payload}
+  @Emit('createNode') createNode(payload: {type: NodeType}) {return payload}
+  @Emit('removeSelected') removeSelected() {}
 
   get iconStyles() {
     return {width: '36px', height: '20px'}
@@ -48,10 +47,6 @@ export default class FlowTool extends Vue {
   createNodeEvent() {this.createNode({type: NodeType.TriggerEvent})}
   createNodeClock() {this.createNode({type: NodeType.Clock})}
   createNodeStop() {this.createNode({type: NodeType.Stop})}
-
-  removeSelected() {
-    this.$root.$emit('removeFlowEditorSelected')
-  }
 }
 </script>
 
@@ -59,6 +54,7 @@ export default class FlowTool extends Vue {
 .tool-bar {
   display: flex;
   height: 100%;
+  border-bottom: 1px solid #E8EAEC;
   font-weight: 400;
   font-size: 12px;
   color: #515A6E;
@@ -69,7 +65,7 @@ export default class FlowTool extends Vue {
     justify-content: space-between;
     align-items: center;
     height: 100%;
-    padding: 0 10px 0 16px;
+    padding: 0 16px;
 
     .tool-item {
       display: inline-flex;
@@ -77,8 +73,8 @@ export default class FlowTool extends Vue {
       justify-content: center;
       align-items: center;
       height: 20px;
-      padding: 0 3px;
-      margin: 0 3px;
+      padding: 0 4px;
+      margin: 4px;
       border: 1px solid #E8EAEC;
       border-radius: 2px;
       line-height: 20px;
@@ -91,19 +87,6 @@ export default class FlowTool extends Vue {
 
       &:not(.disabled):hover {
         border: 1px solid #E8EAEC;
-      }
-    }
-
-    .tool-item-db {
-      display: flex;
-      flex-direction: column;
-
-      .db-type {
-        padding: 0 3px;
-        border: 1px solid #E8EAEC;
-        border-radius: 2px;
-        line-height: 20px;
-        color: rgba(0, 122, 255, 1);
       }
     }
 
