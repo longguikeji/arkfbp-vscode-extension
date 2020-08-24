@@ -90,9 +90,7 @@ export class DatabaseProvider
 
   async create() {
     const result = await showCreateDatabaseBox();
-    console.info(result);
     arkfbp.createDatabase({name: result});
-    console.info(11111);
     this.refresh();
   }
 
@@ -123,7 +121,7 @@ export class DatabaseProvider
   ): void {
     const treeItems: DatabaseTreeItem[] = [];
     const databases = arkfbp.getDatabases();
-    console.info(databases);
+
     databases.forEach(database => {
       const item = new DatabaseTreeItem(
         database,
@@ -194,7 +192,6 @@ export class DatabaseProvider
     const treeItems: ColumnTreeItem[] = [];
 
     table.columns.forEach(column => {
-      console.info(column);
       const item = new ColumnTreeItem(
         database,
         table,

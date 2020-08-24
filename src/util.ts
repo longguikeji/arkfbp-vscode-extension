@@ -15,7 +15,5 @@ export function runCommandInIntegratedTerminal(terminal: vscode.Terminal, cmd: s
 		terminal.sendText(['cd', `"${textCwd}"`].join(' '));
 	}
 	cmd_args.splice(0, 0, cmd);
-	const text = cmd_args.join(' ');
-	console.info(text);
 	terminal.sendText(cmd_args.join(' '));
 }

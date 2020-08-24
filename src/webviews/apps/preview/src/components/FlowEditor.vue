@@ -9,13 +9,13 @@
 import { debounce } from "lodash";
 import { Component, Prop, Vue, Watch, Emit } from "vue-property-decorator";
 import { Editor } from "../floweditor/editor";
-import { Node, NodeType, NodeTree } from "../flow/nodes";
+import { Node, NodeType, NodeTree, NodeID } from "../flow/nodes";
 import { Workflow, Edge } from "../flow/workflows";
 
 @Component({})
 export default class FlowEditor extends Vue {
   editor: Editor | null = null;
-  selected: Node | [Node, Node] | null = null;
+  selected: Node | [NodeID, NodeID] | null = null;
 
   debounceMoveNode = debounce(payload => this.moveNode(payload), 500);
 
@@ -79,7 +79,7 @@ export default class FlowEditor extends Vue {
         this.selected = node;
       },
       onEdgeSelected: (from: Node, to: Node) => {
-        this.selected = [from, to];
+        this.selected = [from.id, to.id];
       },
       onNodeMoving: (id: string, x: number, y: number) => {
         const node = this.workflow.getNodeById(id);

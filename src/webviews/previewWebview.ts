@@ -108,8 +108,6 @@ export class PreviewWebview extends WebviewBase {
 			}
 		});
 
-		console.info(graphIndexNodes, 'graphIndexNodes')
-
 		const state: PreviewState = {
 			graphNodes: graphIndexNodes,
 			filePath: flowDir,

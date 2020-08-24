@@ -424,9 +424,6 @@ export class Editor {
                         const tx = p.left + p.width / 2 + o.left
                         const ty = p.top
 
-                        console.info('++++++', p.left, o.left, p.width / 2)
-                        console.info('++++|||', p.top, o.top, p.height / 2)
-
                         // this.updateEdgeXY(edge, sx, sy, tx, ty)
                     }
                 }

@@ -12,7 +12,7 @@ import { showCreateFlowNodeBox } from './createFlowNodeBox';
 
 import { COMMAND_REFRESH, FlowOutlineProvider, COMMAND_SELECTION, posToLine } from './flowOutline';
 
-import { isArkFBPApp, isArkFBPAppByDocument, getArkFBPFlowDirByDocument, getDatabases } from './arkfbp';
+import { isArkFBPApp, isArkFBPAppByDocument, getArkFBPFlowDirByDocument, getArkFBPNodeDirByDocument, getDatabases } from './arkfbp';
 
 import {
 	window, ExtensionContext, Terminal,
@@ -143,7 +143,7 @@ export async function activate(context: ExtensionContext) {
 
 			if (typeof result !== 'undefined') {
 				const flowDir = path.join(item.dir, item.label);
-				console.info(flowDir);
+
 				rimraf.sync(flowDir);
 				flowProvider.refresh();
 			}
@@ -176,10 +176,8 @@ export async function activate(context: ExtensionContext) {
 	);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.open", async (item: any) => {
-			console.info(item);
 			const flow = item.reference;
 			const graphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flow);
-			console.info(graphDefinitionFile);
 
 			await vscode.workspace.openTextDocument(graphDefinitionFile).then(doc => {
 				vscode.window.showTextDocument(doc).then(async () => {
@@ -216,7 +214,6 @@ export async function activate(context: ExtensionContext) {
 	);
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.copyFlowNode', (item) => {
-			console.info(item);
 			//vscode.commands.executeCommand('arkfbp.createFlowNode').then(() => flowOutlineDataProvider.refresh());
 		})
 	);
@@ -249,8 +246,13 @@ export async function activate(context: ExtensionContext) {
 			}, 'OK');
 
 			if (typeof result !== 'undefined') {
-				// try to delete the node file
 				if (typeof item.id !== 'undefined') {
+					const editor = vscode.window.activeTextEditor;
+					const nodeFilePath = getArkFBPNodeDirByDocument(editor.document);
+					console.info(nodeFilePath, 'nodeFilePath')
+
+					// rimraf.sync(nodeFilePath);
+					// flowProvider.refresh();
 					vscode.window.showInformationMessage(`The flow node ${item.cls} with id: ${item.id} deleted`);
 				} else {
 					vscode.window.showInformationMessage(`The flow node ${item.cls} with no id deleted`);
@@ -261,7 +263,6 @@ export async function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.open', async (item) => {
-			console.info(item);
 
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {

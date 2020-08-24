@@ -52,7 +52,6 @@ export class FlowsProvider
       flowReference = flowReference.replace('/', '.');
     }
 
-    console.info(flowReference);
     const result = await showCreateFlowBox(flowReference);
     this.refresh();
   }
@@ -102,7 +101,7 @@ export class FlowsProvider
     const flowName = item.reference;
 
     const inputs = await box.showRunFlowInputsBox();
-    console.info(inputs);
+
     arkfbp.runFlow(this.workspaceRoot, this.terminal, flowName, inputs.format, inputs.data);
   }
 

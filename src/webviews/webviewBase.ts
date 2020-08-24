@@ -188,12 +188,17 @@ export abstract class WebviewBase implements Disposable {
 
 			this.getMessage(graphFilePath);
 		} else {
-			// Reset the html to get the webview to reload
-			this._panel.webview.html = '';
-			this._panel.webview.html = html;
-			this.getMessage(graphFilePath);
-			this._panel.reveal(this._panel.viewColumn || ViewColumn.Active, false);
+			this.resetPanel()
 		}
+	}
+
+	// Reset the html to get the webview to reload
+	async resetPanel() {
+		const html = await this.getHtml();
+		
+		this._panel.webview.html = '';
+		this._panel.webview.html = html;
+		this._panel.reveal(this._panel.viewColumn || ViewColumn.Active, false);
 	}
 
 	private _html: string | undefined;
@@ -280,20 +285,22 @@ export abstract class WebviewBase implements Disposable {
 					case 'createNode':
 						const flowReference = getFlowReference(graphFilePath)
 						await showCreateFlowNodeBox(flowReference, message.node)
-						this.show(graphFilePath)
-						return;
+						this.resetPanel()
+						return
 					case 'moveNode':
 						updateFlowGraph('moveNode', graphFilePath, message.node);
-						return;
-					case 'createEdge':
-						updateFlowGraph('createEdge', graphFilePath, message.node);
-						return;
+						return
 					case 'removeNode':
 						updateFlowGraph('removeNode', graphFilePath, message.node);
-						return;
+						this.resetPanel()
+						return
+					case 'createEdge':
+						updateFlowGraph('updateEdge', graphFilePath, message.node);
+						return
 					case 'removeEdge':
-						updateFlowGraph('removeEdge', graphFilePath, message.node);
-						return;
+						updateFlowGraph('updateEdge', graphFilePath, message.node);
+						this.resetPanel()
+						return
 				}
 			},
 			null,

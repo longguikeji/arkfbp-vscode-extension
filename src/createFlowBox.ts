@@ -30,6 +30,5 @@ export async function showCreateFlowBox(root?: string) {
 		cwd: cwd,
 	});
 
-	console.info(stdout.toString());
 	window.showInformationMessage(`工作流${result}创建成功`);
 }

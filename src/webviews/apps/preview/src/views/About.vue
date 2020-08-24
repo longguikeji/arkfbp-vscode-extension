@@ -16,9 +16,8 @@ import {
   FunctionNode,
   NopNode,
   Node,
-} from "./../flow/nodes";
-import { OperationType } from './../flow/nodes/dbNode'
-import { Edge } from "../floweditor/edge";
+ } from "./../flow/nodes";
+import { NodeID } from './../flow/nodes/node'
 
 @Component({
   components: {
@@ -84,23 +83,47 @@ export default class About extends Vue {
     })
   }
 
-  flowRemoveSelected(payload: Node | [Node, Node]) {
+  flowRemoveSelected(payload: Node | [NodeID, NodeID]) {
     if(Array.isArray(payload)) {
+      const node = this.workflow.getNodeById(payload[0])
       this.vscode.postMessage({
         command: 'removeEdge',
         node: {
-          id: payload[0].id,
-          cls: payload[0].cls,
-          filename: payload[0].fileName,
-          x: payload[0].position[0],
-          y: payload[0].position[1],
+          id: node.id,
+          cls: node.cls,
+          filename: node.fileName,
+          x: node.position[0],
+          y: node.position[1],
         }
       })
-    }else {
+      return
+    }
+
+    if(payload instanceof Node) {
       this.vscode.postMessage({
         command: 'removeNode',
         node: {
           id: payload.id,
+          cls: payload.cls,
+          filename: payload.fileName,
+          x: payload.position[0],
+          y: payload.position[1],
+        }
+      })
+    
+      this.workflow.edges.forEach((item: [NodeID, NodeID]) => {
+        const node = this.workflow.getNodeById(item[0])
+        if(item[1] === payload.id) {
+          this.vscode.postMessage({
+            command: 'removeEdge',
+            node: {
+              id: node.id,
+              cls: node.cls,
+              filename: node.fileName,
+              x: node.position[0],
+              y: node.position[1],
+            }
+          })
         }
       })
     }
@@ -145,7 +168,6 @@ export default class About extends Vue {
           nodeTree.add(nopNode, nodeTree);
           break;
         default:
-          console.info('base...', nodes[i].base);
           break;
       }
 
