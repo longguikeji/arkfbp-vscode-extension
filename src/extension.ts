@@ -12,7 +12,7 @@ import { showCreateFlowNodeBox } from './createFlowNodeBox';
 
 import { COMMAND_REFRESH, FlowOutlineProvider, COMMAND_SELECTION, posToLine } from './flowOutline';
 
-import { isArkFBPApp, isArkFBPAppByDocument, getArkFBPFlowDirByDocument, getArkFBPNodeDirByDocument, getDatabases } from './arkfbp';
+import { isArkFBPApp, isArkFBPAppByDocument, getArkFBPFlowDirByDocument, getDatabases } from './arkfbp';
 
 import {
 	window, ExtensionContext, Terminal,
@@ -246,13 +246,8 @@ export async function activate(context: ExtensionContext) {
 			}, 'OK');
 
 			if (typeof result !== 'undefined') {
+				// try to delete the node file
 				if (typeof item.id !== 'undefined') {
-					const editor = vscode.window.activeTextEditor;
-					const nodeFilePath = getArkFBPNodeDirByDocument(editor.document);
-					console.info(nodeFilePath, 'nodeFilePath')
-
-					// rimraf.sync(nodeFilePath);
-					// flowProvider.refresh();
 					vscode.window.showInformationMessage(`The flow node ${item.cls} with id: ${item.id} deleted`);
 				} else {
 					vscode.window.showInformationMessage(`The flow node ${item.cls} with no id deleted`);

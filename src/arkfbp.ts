@@ -204,13 +204,6 @@ export function getArkFBPFlowDirByDocument(document: TextDocument): string {
     return flowDir;
 }
 
-export function getArkFBPNodeDirByDocument(document: TextDocument): string {
-    const nodeFileName = document.uri.fsPath
-    if(isArkFBPNode(path.dirname(document.uri.fsPath))) {
-        return nodeFileName;
-    }
-}
-
 export interface GraphNode {
     indexs?: number[];
     kind?: ts.SyntaxKind;
@@ -553,6 +546,7 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
                             case 'moveNode':
                                 arrayExpression.elements.forEach((item: babelTypes.ObjectExpression) => {
                                     if(((item.properties.find((e: babelTypes.ObjectProperty) => e.key.name === 'id') as babelTypes.ObjectProperty).value as babelTypes.StringLiteral).value === node.id) {
+                                        item.properties = [...item.properties, o3, o4]
                                         item.properties = item.properties.map((m: babelTypes.ObjectProperty) => {
                                             if(m.key.name === 'x') {
                                                 (m.value as babelTypes.NumberLiteral).value = node.x

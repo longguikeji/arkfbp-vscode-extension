@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.9.0",
+    "ant-design-vue": "^1.4.1",
     "babel-generator": "^6.26.1",
     "babel-template": "^6.26.0",
     "core-js": "^3.6.4",
@@ -32,6 +33,7 @@
     "@types/uuid": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^2.18.0",
     "@typescript-eslint/parser": "^2.18.0",
+    "vue-cli-plugin-ant-design": "^1.0.0",
     "@vue/cli-plugin-babel": "~4.2.0",
     "@vue/cli-plugin-eslint": "~4.2.0",
     "@vue/cli-plugin-router": "~4.2.0",
