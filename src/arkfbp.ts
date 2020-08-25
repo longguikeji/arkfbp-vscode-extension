@@ -167,6 +167,22 @@ export function isArkFBPFlow(root: string): boolean {
     }
 }
 
+export function isArkFBPNode(root: string): boolean {
+    try {
+        if (!root.includes('nodes')) {
+            return false;
+        }
+
+        if(isArkFBPFlow(root.split('/').slice(0, -2).join('/'))){
+            return false;
+        }
+
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
 /**
  *
  * @param root
@@ -370,10 +386,14 @@ export function getFlowPath(flow: string): string {
     return flow.replace(/\./g, '/');
 }
 
-export function getGraphFile(flow: string): string {
+export function getGraphFilePath(flow: string): string {
     const flowPath = getFlowPath(flow);
     const flowRootDirPath = getArkFBPFlowRootDir(getArkFBPAppDir());
     return path.join(flowRootDirPath, flowPath, 'index.js');
+}
+
+export function getFlowReference(graphFilePath: string): string {
+    return graphFilePath.split('/').slice(-4, -1).join('.')
 }
 
 /**
@@ -436,7 +456,6 @@ export function getFlowReferenceByAbsoluteFlowDirPath(p: string): string{
 
 export function findNodeFilesByClass(flowDirPath: string, classID: string): string[] {
     const nodesDirPath = path.join(flowDirPath, 'nodes');
-    console.info(nodesDirPath);
     const elements = fs.readdirSync(nodesDirPath);
     const matchedFiles: string[] = [];
     elements.forEach((element) => {
@@ -454,11 +473,10 @@ export function createNode(options: { flow: string, base: string, class: string,
         cwd: cwd,
     });
 
-    console.info(stdout.toString());
     return true;
 }
 
-export function updateFlowGraph(type: string, graphFilePath: string, node: {
+export function updateFlowGraph(actionType: string, graphFilePath: string, node: {
     id: string,
     cls: string,
     filename: string,
@@ -466,21 +484,20 @@ export function updateFlowGraph(type: string, graphFilePath: string, node: {
     x: number,
     y: number,
 }) {
-    const nodes = getArkFBPGraphNodes(graphFilePath);
-    nodes.push(node);
-
     const code = fs.readFileSync(graphFilePath).toString();
     const result = babel.transform(code, {
         plugins: getPlugins(),
     });
     
     function getPlugins() {
-        switch (type) {
+        switch (actionType) {
             case 'createNode':
-                return [myImportInjector, myNodesInjector]
+                return [myImportInjector, myNodesInjector];
             case 'moveNode':
                 return [myNodesInjector]
-            case 'addEdge':
+            case 'removeNode':
+                return [myImportInjector, myNodesInjector]
+            case 'updateEdge':
                 return [myNodesInjector]
             default:
                 break
@@ -492,11 +509,18 @@ export function updateFlowGraph(type: string, graphFilePath: string, node: {
         return {
             visitor: {
                 Program(path: any, state: any) {
-                    const lastImport = path.get("body").filter((p: any) => p.isImportDeclaration()).pop();
-                    if (lastImport) {
-                        lastImport.insertAfter(myImport());
+                    switch (actionType) {
+                        case 'createNode':
+                            const lastImport = path.get("body").filter((p: any) => p.isImportDeclaration()).pop();
+                            if (lastImport) {
+                                lastImport.insertAfter(myImport());
+                            }
+                            break;
+                        case 'removeNode':
+                            path.parent.program.body = path.parent.program.body.filter((e: any) => e.type !== 'ImportDeclaration' || e.specifiers[0].local.name !== node.cls )
+                        default:
+                            break
                     }
-
                 },
             },
         };
@@ -515,13 +539,14 @@ export function updateFlowGraph(type: string, graphFilePath: string, node: {
                         const o4 = babelTypes.objectProperty(babelTypes.identifier('y'), babelTypes.numericLiteral(node.y));
                         const o5 = node.next ? babelTypes.objectProperty(babelTypes.identifier('next'), babelTypes.stringLiteral(node.next)): null;
 
-                        switch (type) {
+                        switch (actionType) {
                             case 'createNode':
                                 arrayExpression.elements.push(babelTypes.objectExpression([o1, o2, o3, o4]))
                                 break;
                             case 'moveNode':
                                 arrayExpression.elements.forEach((item: babelTypes.ObjectExpression) => {
                                     if(((item.properties.find((e: babelTypes.ObjectProperty) => e.key.name === 'id') as babelTypes.ObjectProperty).value as babelTypes.StringLiteral).value === node.id) {
+                                        item.properties = [...item.properties, o3, o4]
                                         item.properties = item.properties.map((m: babelTypes.ObjectProperty) => {
                                             if(m.key.name === 'x') {
                                                 (m.value as babelTypes.NumberLiteral).value = node.x
@@ -536,15 +561,19 @@ export function updateFlowGraph(type: string, graphFilePath: string, node: {
                                     }
                                 })
                                 break;
-                            case 'addEdge':
+                            case 'removeNode':
+                                arrayExpression.elements = arrayExpression.elements.filter((item: babelTypes.ObjectExpression) => 
+                                    ((item.properties.find((e: babelTypes.ObjectProperty) => e.key.name === 'id') as babelTypes.ObjectProperty).value as babelTypes.StringLiteral).value !== node.id
+                                )
+                                break;
+                            case 'updateEdge':
                                 arrayExpression.elements = arrayExpression.elements.map((item: babelTypes.ObjectExpression) => {
                                     if(((item.properties.find((e: babelTypes.ObjectProperty) => e.key.name === 'id') as babelTypes.ObjectProperty).value as babelTypes.StringLiteral).value === node.id) {
-                                        return babelTypes.objectExpression([o1, o2, o3, o4, o5])
+                                        return babelTypes.objectExpression(o5 ? [o1, o2, o3, o4, o5] : [o1, o2, o3, o4])
                                     } else {
                                         return item
                                     }
                                 })
-                                break;
                             default:
                                 break;
                         }
@@ -575,6 +604,5 @@ export function createDatabase(options: { name: string }): boolean {
         cwd: cwd,
     });
 
-    console.info(stdout.toString());
     return true;
 }

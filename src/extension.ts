@@ -143,7 +143,7 @@ export async function activate(context: ExtensionContext) {
 
 			if (typeof result !== 'undefined') {
 				const flowDir = path.join(item.dir, item.label);
-				console.info(flowDir);
+
 				rimraf.sync(flowDir);
 				flowProvider.refresh();
 			}
@@ -176,10 +176,8 @@ export async function activate(context: ExtensionContext) {
 	);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.open", async (item: any) => {
-			console.info(item);
 			const flow = item.reference;
 			const graphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flow);
-			console.info(graphDefinitionFile);
 
 			await vscode.workspace.openTextDocument(graphDefinitionFile).then(doc => {
 				vscode.window.showTextDocument(doc).then(async () => {
@@ -216,7 +214,6 @@ export async function activate(context: ExtensionContext) {
 	);
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.copyFlowNode', (item) => {
-			console.info(item);
 			//vscode.commands.executeCommand('arkfbp.createFlowNode').then(() => flowOutlineDataProvider.refresh());
 		})
 	);
@@ -261,7 +258,6 @@ export async function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.open', async (item) => {
-			console.info(item);
 
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {

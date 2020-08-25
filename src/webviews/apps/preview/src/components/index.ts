@@ -1,9 +1,11 @@
-import FlowEditor from './FlowEditor.vue'
 import HelloWorld from './HelloWorld.vue'
+import FlowEditor from './FlowEditor.vue'
+import FlowTool from './FlowTool.vue'
 
 const components = {
-  FlowEditor,
   HelloWorld,
+  FlowEditor,
+  FlowTool,
 }
 
 export default components

@@ -3,8 +3,8 @@ import * as vscode from 'vscode';
 import * as arkfbp from './arkfbp';
 import { idText } from 'typescript';
 
-export async function showCreateFlowNodeBox(flowReference?: string) {
-	const flowName = await window.showInputBox({
+export async function showCreateFlowNodeBox(flowReference?: string, node?: {type: string}) {
+	const flowName = node ? flowReference : await window.showInputBox({
 		placeHolder: "流名称",
 		value: flowReference ? flowReference : '',
 	});
@@ -29,7 +29,7 @@ export async function showCreateFlowNodeBox(flowReference?: string) {
 		return;
 	}
 
-	const baseClassName = await window.showQuickPick(
+	const baseClassName = node ? `${node.type}Node` : await window.showQuickPick(
 		[
 			'StartNode',
 			'StopNode',
@@ -61,9 +61,7 @@ export async function showCreateFlowNodeBox(flowReference?: string) {
 		window.showErrorMessage(`新节点${className}创建失败`);
 	}
 
-	const graphFilePath = arkfbp.getGraphFile(flowName);
-
-	console.info(graphFilePath, 'graphFilePath')
+	const graphFilePath = arkfbp.getGraphFilePath(flowName);
 
 	arkfbp.updateFlowGraph('createNode', graphFilePath, {
 		cls: className,

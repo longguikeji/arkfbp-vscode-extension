@@ -1,5 +1,6 @@
 <template>
   <div class="flow-editor">
+    <component :is="flowTool" />
     <canvas id="c" class="canvas"></canvas>
   </div>
 </template>
@@ -8,36 +9,37 @@
 import { debounce } from "lodash";
 import { Component, Prop, Vue, Watch, Emit } from "vue-property-decorator";
 import { Editor } from "../floweditor/editor";
-import { Node, NodeTree } from "../flow/nodes";
+import { Node, NodeType, NodeTree, NodeID } from "../flow/nodes";
 import { Workflow, Edge } from "../flow/workflows";
 
 @Component({})
 export default class FlowEditor extends Vue {
   editor: Editor | null = null;
-  selected: object = {};
+  selected: Node | [NodeID, NodeID] | null = null;
 
   debounceMoveNode = debounce(payload => this.moveNode(payload), 500);
 
   @Prop({ type: Object, required: true }) workflow!: Workflow;
+
+  @Emit("createNode")
+  createNode(payload: { type: NodeType }) {
+    debugger
+    return payload;
+  }
 
   @Emit("moveNode")
   moveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
     return payload;
   }
 
-  @Emit("addEdge")
-  addEdge(payload: { from: Node; to: Node }) {
+  @Emit("createEdge")
+  createEdge(payload: { from: Node; to: Node }) {
     return payload;
   }
 
-  @Emit("selectNode")
-  selectNode(payload: { node: Node | null }) {
-    return payload;
-  }
-
-  @Emit("remove")
-  remove(payload: { node?: Node; edge?: { from: Node; to: Node } }) {
-    return payload;
+  @Emit("removeSelected")
+  removeSelected() {
+    return this.selected;
   }
 
   @Watch("workflow")
@@ -48,13 +50,21 @@ export default class FlowEditor extends Vue {
     if (this.workflow) {
       this.renderGraph();
     }
-    this.selected = {};
+    this.selected = null;
+  }
+
+  get flowTool() {
+    return {render: h => h('FlowTool', {
+        on: {
+            createNode: this.createNode,
+            removeSelected: this.removeSelected,
+        },
+    })}
   }
 
   fitToContainer(c: any) {
     c.style.width = "100%";
     c.style.height = "500px";
-    c.style.border = '1px solid green';
     c.width = c.offsetWidth;
     c.height = c.offsetHeight;
   }
@@ -66,16 +76,10 @@ export default class FlowEditor extends Vue {
     this.editor = new Editor("c", {
       onNodeSelected: (id: string) => {
         const node = this.workflow.getNodeById(id);
-        const selectedNode = (this.selected as any).node
-          ? (this.selected as any).node
-          : {};
-        if (selectedNode.id !== id) {
-          this.selectNode({ node });
-          this.selected = { node };
-        }
+        this.selected = node;
       },
       onEdgeSelected: (from: Node, to: Node) => {
-        this.selected = { edge: { from, to } };
+        this.selected = [from.id, to.id];
       },
       onNodeMoving: (id: string, x: number, y: number) => {
         const node = this.workflow.getNodeById(id);
@@ -85,7 +89,7 @@ export default class FlowEditor extends Vue {
         const from = this.workflow.getNodeById(fromId);
         const to = this.workflow.getNodeById(toId);
         if (from != null && to != null) {
-            this.addEdge({ from, to });
+            this.createEdge({ from, to });
         }
       }
     });
@@ -103,16 +107,12 @@ export default class FlowEditor extends Vue {
           node.children.forEach(c => walkTree(c));
         }
       } else {
-        const {
-          id,
-          type,
-          position: [left, top]
-        } = node;
+        const {id, type, position: [left, top]} = node;
         const graphNode = editor.createNode({
-          id: id as any,
-          type: type as any, // TODO: 统一两个NodeType
-          left,
-          top,
+            id,
+            type: type as any,  // TODO: 统一两个NodeType
+            left,
+            top,
         });
         mapping.set(node.id, graphNode);
       }
@@ -123,17 +123,6 @@ export default class FlowEditor extends Vue {
       editor.connect(mapping.get(from), mapping.get(to));
     });
 
-  }
-
-  created() {
-    this.$root.$on("removeFlowEditorSelected", () => {
-      // TODO 移除节点时没有移除tabBar中的节点，重构后需添加此功能
-      this.remove(this.selected);
-    });
-  }
-
-  beforeDestroy() {
-    this.$root.$off("removeFlowEditorSelected");
   }
 
   mounted() {

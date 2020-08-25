@@ -1,8 +1,8 @@
-import { Edge } from './edge'
 import 'fabric'
+import { Edge } from './edge'
 declare let fabric: any
 
-export enum NodeType {
+export const enum NodeType {
     NOP = 'NOP',
     Start = 'Start',
     Stop = 'Stop',
@@ -23,7 +23,7 @@ export class Node extends fabric.Group {
     inputs: Edge[]
     outputs: Edge[]
 
-    private _id: number
+    private _id: string
 
     private _input: fabric.Object | null
     private _output: fabric.Object | null
@@ -34,16 +34,16 @@ export class Node extends fabric.Group {
         this.inputs = []
         this.outputs = []
 
-        this._id = -1
+        this._id = ''
         this._input = null
         this._output = null
     }
 
-    get id(): number {
+    get id(): string {
         return this._id
     }
 
-    set id(value: number) {
+    set id(value: string) {
         this._id = value
     }
 
@@ -120,7 +120,7 @@ function makeOutput(left: number, top: number, fill?: string): fabric.Object {
     return group
 }
 
-function makeNode(id: number, options: {
+function makeNode(id: string, options: {
     hasInputs?: boolean,
     hasOutputs?: boolean,
     stroke?: string,
@@ -257,7 +257,7 @@ function makeNode(id: number, options: {
     return node
 }
 
-export function createStartNode(id: number, left: number, top: number) {
+export function createStartNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasOutputs: true,
         stroke: '#607D8B',
@@ -271,7 +271,7 @@ export function createStartNode(id: number, left: number, top: number) {
     return node
 }
 
-export function createStopNode(id: number, left: number, top: number) {
+export function createStopNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         stroke: '#607D8B',
@@ -285,7 +285,7 @@ export function createStopNode(id: number, left: number, top: number) {
     return node
 }
 
-export function createFunctionNode(id: number, left: number, top: number) {
+export function createFunctionNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#969CA2',
@@ -303,7 +303,7 @@ export function createFunctionNode(id: number, left: number, top: number) {
     return node
 }
 
-export function createAPINode(id: number, left: number, top: number) {
+export function createAPINode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#50B0C6',
@@ -321,7 +321,7 @@ export function createAPINode(id: number, left: number, top: number) {
     return node
 }
 
-export function createTriggerEventNode(id: number, left: number, top: number) {
+export function createTriggerEventNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#50B0C6',
@@ -339,7 +339,7 @@ export function createTriggerEventNode(id: number, left: number, top: number) {
     return node
 }
 
-export function createTriggerWorkflowNode(id: number, left: number, top: number) {
+export function createTriggerWorkflowNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#50B0C6',
@@ -357,7 +357,7 @@ export function createTriggerWorkflowNode(id: number, left: number, top: number)
     return node
 }
 
-export function createWaitEventNode(id: number, left: number, top: number) {
+export function createWaitEventNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#50B0C6',
@@ -375,7 +375,7 @@ export function createWaitEventNode(id: number, left: number, top: number) {
     return node
 }
 
-export function createClockNode(id: number, left: number, top: number) {
+export function createClockNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#50B0C6',
@@ -393,7 +393,7 @@ export function createClockNode(id: number, left: number, top: number) {
     return node
 }
 
-export function createIFNode(id: number, left: number, top: number) {
+export function createIFNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#50B0C6',

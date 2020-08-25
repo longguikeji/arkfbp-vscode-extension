@@ -109,7 +109,6 @@ export class GraphPreviewPanel {
 	public render(graphNodes: GraphNode[]) {
 		// Send a message to the webview webview.
 		// You can send any JSON serializable data.
-		console.info('render:', graphNodes);
 		this._panel.webview.postMessage({ command: 'render', nodes: graphNodes});
 	}
 

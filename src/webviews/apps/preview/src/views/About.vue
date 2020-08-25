@@ -9,13 +9,15 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { Workflow, Edge } from "./../flow/workflows/";
 import { NodeTree } from "./../flow/nodes/nodeTree";
 import {
+  NodeType,
   StartNode,
   StopNode,
   APINode,
   FunctionNode,
   NopNode,
   Node,
-} from "./../flow/nodes";
+ } from "./../flow/nodes";
+import { NodeID } from './../flow/nodes/node'
 
 @Component({
   components: {
@@ -23,6 +25,7 @@ import {
 })
 export default class About extends Vue {
   private workflow: Workflow|null = null
+  private node: Node|null = null
 
   get vscode() {
     return (window as any).acquireVsCodeApi
@@ -34,17 +37,25 @@ export default class About extends Vue {
             workflow: this.workflow,
         },
         on: {
+            createNode: this.flowCreateNode,
             moveNode: this.flowMoveNode,
-            addEdge: this.flowAddEdge,
-            selectNode: this.flowSelectNode,
-            remove: this.flowRemoveSelected,
+            createEdge: this.flowCreateEdge,
+            removeSelected: this.flowRemoveSelected,
         },
     })}
   }
 
+  flowCreateNode(payload: {type: NodeType}) {
+    this.vscode.postMessage({
+      command: 'createNode',
+      node: {
+        type: payload.type,
+      }
+    })
+  }
+
   flowMoveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
     const edge = payload.workflow.edges.find((item: Edge) => item[0] === payload.node.id)
-    debugger
     this.vscode.postMessage({
       command: 'moveNode',
       node: {
@@ -58,9 +69,9 @@ export default class About extends Vue {
     })
   }
 
-  flowAddEdge(payload: { from: Node; to: Node }) {
+  flowCreateEdge(payload: { from: Node; to: Node }) {
     this.vscode.postMessage({
-      command: 'addEdge',
+      command: 'createEdge',
       node: {
         id: payload.from.id,
         cls: payload.from.cls,
@@ -72,12 +83,50 @@ export default class About extends Vue {
     })
   }
 
-  flowSelectNode() {
+  flowRemoveSelected(payload: Node | [NodeID, NodeID]) {
+    if(Array.isArray(payload)) {
+      const node = this.workflow.getNodeById(payload[0])
+      this.vscode.postMessage({
+        command: 'removeEdge',
+        node: {
+          id: node.id,
+          cls: node.cls,
+          filename: node.fileName,
+          x: node.position[0],
+          y: node.position[1],
+        }
+      })
+      return
+    }
 
-  }
-
-  flowRemoveSelected() {
-
+    if(payload instanceof Node) {
+      this.vscode.postMessage({
+        command: 'removeNode',
+        node: {
+          id: payload.id,
+          cls: payload.cls,
+          filename: payload.fileName,
+          x: payload.position[0],
+          y: payload.position[1],
+        }
+      })
+    
+      this.workflow.edges.forEach((item: [NodeID, NodeID]) => {
+        const node = this.workflow.getNodeById(item[0])
+        if(item[1] === payload.id) {
+          this.vscode.postMessage({
+            command: 'removeEdge',
+            node: {
+              id: node.id,
+              cls: node.cls,
+              filename: node.fileName,
+              x: node.position[0],
+              y: node.position[1],
+            }
+          })
+        }
+      })
+    }
   }
 
   mounted() {
@@ -87,7 +136,6 @@ export default class About extends Vue {
     const edges: Edge[] = [];
 
     for (let i = 0; i < nodes.length; ++i) {
-      console.info(i);
       switch (nodes[i].base) {
         case 'APINode':
           const apiNode = new APINode(nodes[i].id, `${nodes[i].cls}.js`)
@@ -120,7 +168,6 @@ export default class About extends Vue {
           nodeTree.add(nopNode, nodeTree);
           break;
         default:
-          console.info('base...', nodes[i].base);
           break;
       }
 
@@ -135,3 +182,6 @@ export default class About extends Vue {
   }
 }
 </script>
+
+<style scoped lang="less">
+</style>
