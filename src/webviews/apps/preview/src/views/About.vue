@@ -8,8 +8,8 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 import { Workflow, Edge } from "./../flow/workflows/";
 import { NodeTree } from "./../flow/nodes/nodeTree";
+import flowEditor from './../apis/flowEditor'
 import {
-  NodeType,
   StartNode,
   StopNode,
   APINode,
@@ -17,7 +17,6 @@ import {
   NopNode,
   Node,
  } from "./../flow/nodes";
-import { NodeID } from './../flow/nodes/node'
 
 @Component({
   components: {
@@ -25,11 +24,6 @@ import { NodeID } from './../flow/nodes/node'
 })
 export default class About extends Vue {
   private workflow: Workflow|null = null
-  private node: Node|null = null
-
-  get vscode() {
-    return (window as any).acquireVsCodeApi
-  }
 
   get flowEditor() {
     return {render: h => h('FlowEditor', {
@@ -37,96 +31,13 @@ export default class About extends Vue {
             workflow: this.workflow,
         },
         on: {
-            createNode: this.flowCreateNode,
-            moveNode: this.flowMoveNode,
-            createEdge: this.flowCreateEdge,
-            removeSelected: this.flowRemoveSelected,
+            createNode: flowEditor.createNode,
+            selectNode: flowEditor.selectNode,
+            moveNode: flowEditor.moveNode,
+            createEdge: flowEditor.createEdge,
+            removeSelected: flowEditor.removeSelected,
         },
     })}
-  }
-
-  flowCreateNode(payload: {type: NodeType}) {
-    this.vscode.postMessage({
-      command: 'createNode',
-      node: {
-        type: payload.type,
-      }
-    })
-  }
-
-  flowMoveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
-    const edge = payload.workflow.edges.find((item: Edge) => item[0] === payload.node.id)
-    this.vscode.postMessage({
-      command: 'moveNode',
-      node: {
-        id: payload.node.id,
-        cls: payload.node.cls,
-        filename: payload.node.fileName,
-        x: payload.x,
-        y: payload.y,
-        next: edge ? edge[1] : null
-      }
-    })
-  }
-
-  flowCreateEdge(payload: { from: Node; to: Node }) {
-    this.vscode.postMessage({
-      command: 'createEdge',
-      node: {
-        id: payload.from.id,
-        cls: payload.from.cls,
-        filename: payload.from.fileName,
-        x: payload.from.position[0],
-        y: payload.from.position[1],
-        next: payload.to.id,
-      }
-    })
-  }
-
-  flowRemoveSelected(payload: Node | [NodeID, NodeID]) {
-    if(Array.isArray(payload)) {
-      const node = this.workflow.getNodeById(payload[0])
-      this.vscode.postMessage({
-        command: 'removeEdge',
-        node: {
-          id: node.id,
-          cls: node.cls,
-          filename: node.fileName,
-          x: node.position[0],
-          y: node.position[1],
-        }
-      })
-      return
-    }
-
-    if(payload instanceof Node) {
-      this.vscode.postMessage({
-        command: 'removeNode',
-        node: {
-          id: payload.id,
-          cls: payload.cls,
-          filename: payload.fileName,
-          x: payload.position[0],
-          y: payload.position[1],
-        }
-      })
-    
-      this.workflow.edges.forEach((item: [NodeID, NodeID]) => {
-        const node = this.workflow.getNodeById(item[0])
-        if(item[1] === payload.id) {
-          this.vscode.postMessage({
-            command: 'removeEdge',
-            node: {
-              id: node.id,
-              cls: node.cls,
-              filename: node.fileName,
-              x: node.position[0],
-              y: node.position[1],
-            }
-          })
-        }
-      })
-    }
   }
 
   mounted() {

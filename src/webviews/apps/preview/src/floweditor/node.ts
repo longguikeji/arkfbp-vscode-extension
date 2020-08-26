@@ -4,15 +4,18 @@ declare let fabric: any
 
 export const enum NodeType {
     NOP = 'NOP',
+    Test = 'Test',
     Start = 'Start',
     Stop = 'Stop',
     API = 'API',
     Function = 'Function',
-    TriggerEvent = 'TriggerEvent',
     TriggerWorkflow = 'TriggerWorkflow',
+    IF = 'IF',
+    Switch = 'Switch',
+    Loop = 'Loop',
+    TriggerEvent = 'TriggerEvent',
     WaitEvent = 'WaitEvent',
     Clock = 'Clock',
-    IF = 'IF',
     DB = 'DB',
 }
 

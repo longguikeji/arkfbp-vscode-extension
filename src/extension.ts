@@ -178,7 +178,7 @@ export async function activate(context: ExtensionContext) {
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.open", async (item: any) => {
 			const flow = item.reference;
 			const graphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flow);
-
+			vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows')
 			await vscode.workspace.openTextDocument(graphDefinitionFile).then(doc => {
 				vscode.window.showTextDocument(doc).then(async () => {
 					vscode.commands.executeCommand('arkfbp.graph.preview');
@@ -203,7 +203,6 @@ export async function activate(context: ExtensionContext) {
 			if (editor === undefined) {
 				return;
 			}
-
 			const flowDirPath = getArkFBPFlowDirByDocument(editor.document);
 			const flowReference = arkfbp.getFlowReferenceByAbsoluteFlowDirPath(flowDirPath);
 

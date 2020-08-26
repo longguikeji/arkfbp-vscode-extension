@@ -603,6 +603,19 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
     }
 }
 
+export async function openNodeFileFromGraph(graphFilePath: string, node: {cls: string}) {
+    const flowDir = path.dirname(graphFilePath);
+    const files = findNodeFilesByClass(flowDir, node.cls);
+    
+    await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup')
+
+    await vscode.workspace.openTextDocument(files[0]).then(doc => {
+        vscode.window.showTextDocument(doc);
+    });
+
+    await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup')
+}
+
 export function createDatabase(options: { name: string }): boolean {
     const cwd = vscode.workspace.workspaceFolders![0].uri.path;
     let stdout = cp.execFileSync('arkfbp', ['db', 'create', '--name', `${options.name}`], {

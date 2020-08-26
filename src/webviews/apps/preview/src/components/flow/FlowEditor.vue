@@ -8,9 +8,9 @@
 <script lang="ts">
 import { debounce } from "lodash";
 import { Component, Prop, Vue, Watch, Emit } from "vue-property-decorator";
-import { Editor } from "../floweditor/editor";
-import { Node, NodeType, NodeTree, NodeID } from "../flow/nodes";
-import { Workflow, Edge } from "../flow/workflows";
+import { Editor } from "../../floweditor/editor";
+import { Node, NodeType, NodeTree, NodeID } from "../../flow/nodes";
+import { Workflow, Edge } from "../../flow/workflows";
 
 @Component({})
 export default class FlowEditor extends Vue {
@@ -23,7 +23,11 @@ export default class FlowEditor extends Vue {
 
   @Emit("createNode")
   createNode(payload: { type: NodeType }) {
-    debugger
+    return payload;
+  }
+
+  @Emit("selectNode")
+  selectNode(payload: { node: Node }) {
     return payload;
   }
 
@@ -39,7 +43,7 @@ export default class FlowEditor extends Vue {
 
   @Emit("removeSelected")
   removeSelected() {
-    return this.selected;
+    return {workflow: this.workflow, selected: this.selected};
   }
 
   @Watch("workflow")
@@ -76,7 +80,11 @@ export default class FlowEditor extends Vue {
     this.editor = new Editor("c", {
       onNodeSelected: (id: string) => {
         const node = this.workflow.getNodeById(id);
-        this.selected = node;
+        const selectedNode = this.selected instanceof Node ? this.selected : null;
+        if(!selectedNode || selectedNode.id !== id){
+            this.selectNode({node});
+            this.selected = node;
+        }
       },
       onEdgeSelected: (from: Node, to: Node) => {
         this.selected = [from.id, to.id];
