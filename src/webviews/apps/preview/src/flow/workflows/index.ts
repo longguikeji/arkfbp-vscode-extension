@@ -7,9 +7,9 @@ type EdgeType = 'positive'|'negative'
 export type Edge = [NodeID, NodeID]|[NodeID, NodeID, EdgeType]
 export type Edges = Edge[]
 
-export class Workflow {
+export class Flow {
 
-    static fromCodes(name: string, code: string, nodeCodes: Array<{name: string, code: string}>): Workflow {
+    static fromCodes(name: string, code: string, nodeCodes: Array<{name: string, code: string}>): Flow {
         return getFlowFromCodes(name, code, nodeCodes)
     }
 

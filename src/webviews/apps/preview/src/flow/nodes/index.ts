@@ -3,12 +3,12 @@ export { StartNode } from './startNode'
 export { StopNode } from './stopNode'
 export { APINode } from './apiNode'
 export { FunctionNode } from './functionNode'
-export { WaitEventNode } from './waitEventNode'
+export { TestNode } from './testNode'
 export { NopNode } from './nopNode'
-export { TriggerEventNode } from './triggerEventNode'
-export { TriggerWorkflowNode } from './triggerWorkflowNode'
+export { LoopNode } from './loopNode'
+export { FlowNode } from './flowNode'
 export { IFNode } from './ifNode'
-export { DBNode } from './dbNode'
+export { SwitchNode } from './switchNode'
 export { NodeTree } from './nodeTree'
 export { Field } from './field'
 export { Outputs } from './outputs'
@@ -23,12 +23,12 @@ import {
   StopNode,
   APINode,
   FunctionNode,
-  WaitEventNode,
+  TestNode,
   IFNode,
-  DBNode,
+  SwitchNode,
   NopNode,
-  TriggerEventNode,
-  TriggerWorkflowNode,
+  LoopNode,
+  FlowNode,
   NodeTree,
   Field,
   Outputs,
@@ -48,16 +48,16 @@ export function makeNode(id: NodeID, type: NodeType): Node {
         return APINode
       case NodeType.Function:
         return FunctionNode
-      case NodeType.TriggerEvent:
-        return TriggerEventNode
-      case NodeType.TriggerWorkflow:
-        return TriggerWorkflowNode
-      case NodeType.WaitEvent:
-        return WaitEventNode
+      case NodeType.Loop:
+        return LoopNode
+      case NodeType.Flow:
+        return FlowNode
+      case NodeType.Test:
+        return TestNode
       case NodeType.IF:
         return IFNode
-      case NodeType.DB:
-        return DBNode
+      case NodeType.Switch:
+        return SwitchNode
       default:
         throw Error('not exists node type')
     }

@@ -21,7 +21,7 @@ import {
 	UpdateConfigurationCommandType
 } from './protocol';
 import { ExtensionContext } from 'vscode';
-import { getFlowReference, updateFlowGraph } from './../arkfbp';
+import { getFlowReference, updateFlowGraph, openNodeFileFromGraph } from './../arkfbp';
 import { showCreateFlowNodeBox } from './../createFlowNodeBox'
 // import { Commands } from '../commands';
 
@@ -179,7 +179,7 @@ export abstract class WebviewBase implements Disposable {
 			this._disposablePanel = Disposable.from(
 				this._panel,
 				this._panel.onDidDispose(this.onPanelDisposed, this),
-				//this._panel.onDidChangeViewState(this.onViewStateChanged, this),
+				// this._panel.onDidChangeViewState(this.onViewStateChanged, this),
 				this._panel.webview.onDidReceiveMessage(this.onMessageReceivedCore, this),
 				...this.registerCommands()
 			);
@@ -284,23 +284,26 @@ export abstract class WebviewBase implements Disposable {
 				switch (message.command) {
 					case 'createNode':
 						const flowReference = getFlowReference(graphFilePath)
-						await showCreateFlowNodeBox(flowReference, message.node)
-						this.resetPanel()
-						return
+						await showCreateFlowNodeBox(flowReference, message.node);
+						this.resetPanel();
+						return;
+					case 'selectNode':
+						openNodeFileFromGraph(graphFilePath, message.node);
+						return;
 					case 'moveNode':
 						updateFlowGraph('moveNode', graphFilePath, message.node);
-						return
+						return;
 					case 'removeNode':
 						updateFlowGraph('removeNode', graphFilePath, message.node);
-						this.resetPanel()
-						return
+						this.resetPanel();
+						return;
 					case 'createEdge':
 						updateFlowGraph('updateEdge', graphFilePath, message.node);
-						return
+						return;
 					case 'removeEdge':
 						updateFlowGraph('updateEdge', graphFilePath, message.node);
-						this.resetPanel()
-						return
+						this.resetPanel();
+						return;
 				}
 			},
 			null,

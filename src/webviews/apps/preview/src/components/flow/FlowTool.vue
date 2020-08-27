@@ -4,13 +4,15 @@
       <div class="tools-left">
       </div>
       <div class="tools-middle">
-        <div class="tool-item"><div @click="createNodeApi">API</div></div>
+        <div class="tool-item"><div @click="createNodeStart">START</div></div>
         <div class="tool-item"><div @click="createNodeFunction">FN</div></div>
         <div class="tool-item"><div @click="createNodeIf">IF</div></div>
-        <div class="tool-item"><div @click="createNodeWorkflow">WF</div></div>
-        <div class="tool-item"><div @click="createNodeWait">WAIT</div></div>
-        <div class="tool-item"><div @click="createNodeEvent">EVENT</div></div>
-        <div class="tool-item"><div @click="createNodeClock">CLOCK</div></div>
+        <div class="tool-item"><div @click="createNodeSwitch">SWITCH</div></div>
+        <div class="tool-item"><div @click="createNodeApi">API</div></div>
+        <div class="tool-item"><div @click="createNodeLoop">LOOP</div></div>
+        <div class="tool-item"><div @click="createNodeFlow">FLOW</div></div>
+         <div class="tool-item"><div @click="createNodeTest">TEST</div></div>
+        <div class="tool-item"><div @click="createNodeNop">NOP</div></div>
         <div class="tool-item"><div @click="createNodeStop">STOP</div></div>
       </div>
       <div class="tools-right">
@@ -22,9 +24,9 @@
 </template>
 
 <script lang="ts">
-import {Vue, Component, Prop, Watch, Emit} from 'vue-property-decorator'
-import {NodeType} from '../flow/nodes'
-import {Workflow} from '../flow/workflows'
+import { Vue, Component, Prop, Watch, Emit } from 'vue-property-decorator'
+import { NodeType } from '../../flow/nodes'
+import { Flow } from '../../flow/workflows'
 
 @Component({
   components: {
@@ -39,13 +41,15 @@ export default class FlowTool extends Vue {
     return {width: '36px', height: '20px'}
   }
 
-  createNodeApi() {this.createNode({type: NodeType.API})}
+  createNodeStart() {this.createNode({type: NodeType.Start})}
   createNodeFunction() {this.createNode({type: NodeType.Function})}
   createNodeIf() {this.createNode({type: NodeType.IF})}
-  createNodeWorkflow() {this.createNode({type: NodeType.TriggerWorkflow})}
-  createNodeWait() {this.createNode({type: NodeType.WaitEvent})}
-  createNodeEvent() {this.createNode({type: NodeType.TriggerEvent})}
-  createNodeClock() {this.createNode({type: NodeType.Clock})}
+  createNodeApi() {this.createNode({type: NodeType.API})}
+  createNodeFlow() {this.createNode({type: NodeType.Flow})}
+  createNodeSwitch() {this.createNode({type: NodeType.Switch})}
+  createNodeLoop() {this.createNode({type: NodeType.Loop})}
+  createNodeTest() {this.createNode({type: NodeType.Test})}
+  createNodeNop() {this.createNode({type: NodeType.NOP})}
   createNodeStop() {this.createNode({type: NodeType.Stop})}
 }
 </script>

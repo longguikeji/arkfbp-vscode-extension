@@ -6,16 +6,15 @@ export type NodeID = string
 
 export const enum NodeType {
     NOP = 'NOP',
+    Test = 'Test',
     Start = 'Start',
     Stop = 'Stop',
     API = 'API',
     Function = 'Function',
-    TriggerEvent = 'TriggerEvent',
-    TriggerWorkflow = 'TriggerWorkflow',
-    WaitEvent = 'WaitEvent',
-    Clock = 'Clock',
+    Flow = 'Flow',
     IF = 'IF',
-    DB = 'DB',
+    Switch = 'Switch',
+    Loop = 'Loop',
 }
 
 

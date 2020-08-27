@@ -1,132 +1,48 @@
 <template>
   <div class="about">
-    <component v-if="workflow" :is="flowEditor" />
+    <component v-if="flow" :is="flowEditor" />
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import { Workflow, Edge } from "./../flow/workflows/";
+import { Flow, Edge } from "./../flow/workflows/";
 import { NodeTree } from "./../flow/nodes/nodeTree";
+import flowEditor from './../apis/flowEditor'
 import {
-  NodeType,
   StartNode,
   StopNode,
   APINode,
   FunctionNode,
   NopNode,
+  SwitchNode,
+  IFNode,
+  TestNode,
+  LoopNode,
+  FlowNode,
   Node,
  } from "./../flow/nodes";
-import { NodeID } from './../flow/nodes/node'
 
 @Component({
   components: {
   }
 })
 export default class About extends Vue {
-  private workflow: Workflow|null = null
-  private node: Node|null = null
-
-  get vscode() {
-    return (window as any).acquireVsCodeApi
-  }
+  private flow: Flow|null = null
 
   get flowEditor() {
     return {render: h => h('FlowEditor', {
         props: {
-            workflow: this.workflow,
+            flow: this.flow,
         },
         on: {
-            createNode: this.flowCreateNode,
-            moveNode: this.flowMoveNode,
-            createEdge: this.flowCreateEdge,
-            removeSelected: this.flowRemoveSelected,
+            createNode: flowEditor.createNode,
+            selectNode: flowEditor.selectNode,
+            moveNode: flowEditor.moveNode,
+            createEdge: flowEditor.createEdge,
+            removeSelected: flowEditor.removeSelected,
         },
     })}
-  }
-
-  flowCreateNode(payload: {type: NodeType}) {
-    this.vscode.postMessage({
-      command: 'createNode',
-      node: {
-        type: payload.type,
-      }
-    })
-  }
-
-  flowMoveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
-    const edge = payload.workflow.edges.find((item: Edge) => item[0] === payload.node.id)
-    this.vscode.postMessage({
-      command: 'moveNode',
-      node: {
-        id: payload.node.id,
-        cls: payload.node.cls,
-        filename: payload.node.fileName,
-        x: payload.x,
-        y: payload.y,
-        next: edge ? edge[1] : null
-      }
-    })
-  }
-
-  flowCreateEdge(payload: { from: Node; to: Node }) {
-    this.vscode.postMessage({
-      command: 'createEdge',
-      node: {
-        id: payload.from.id,
-        cls: payload.from.cls,
-        filename: payload.from.fileName,
-        x: payload.from.position[0],
-        y: payload.from.position[1],
-        next: payload.to.id,
-      }
-    })
-  }
-
-  flowRemoveSelected(payload: Node | [NodeID, NodeID]) {
-    if(Array.isArray(payload)) {
-      const node = this.workflow.getNodeById(payload[0])
-      this.vscode.postMessage({
-        command: 'removeEdge',
-        node: {
-          id: node.id,
-          cls: node.cls,
-          filename: node.fileName,
-          x: node.position[0],
-          y: node.position[1],
-        }
-      })
-      return
-    }
-
-    if(payload instanceof Node) {
-      this.vscode.postMessage({
-        command: 'removeNode',
-        node: {
-          id: payload.id,
-          cls: payload.cls,
-          filename: payload.fileName,
-          x: payload.position[0],
-          y: payload.position[1],
-        }
-      })
-    
-      this.workflow.edges.forEach((item: [NodeID, NodeID]) => {
-        const node = this.workflow.getNodeById(item[0])
-        if(item[1] === payload.id) {
-          this.vscode.postMessage({
-            command: 'removeEdge',
-            node: {
-              id: node.id,
-              cls: node.cls,
-              filename: node.fileName,
-              x: node.position[0],
-              y: node.position[1],
-            }
-          })
-        }
-      })
-    }
   }
 
   mounted() {
@@ -167,6 +83,36 @@ export default class About extends Vue {
           nopNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
           nodeTree.add(nopNode, nodeTree);
           break;
+        case 'SwitchNode':
+          const switchNode = new SwitchNode(nodes[i].id, `${nodes[i].cls}.js`)
+          switchNode.cls = nodes[i].cls
+          switchNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
+          nodeTree.add(switchNode, nodeTree);
+          break;
+        case 'IFNode':
+          const ifNode = new IFNode(nodes[i].id, `${nodes[i].cls}.js`)
+          ifNode.cls = nodes[i].cls
+          ifNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
+          nodeTree.add(ifNode, nodeTree);
+          break;
+        case 'LoopNode':
+          const loopNode = new LoopNode(nodes[i].id, `${nodes[i].cls}.js`)
+          loopNode.cls = nodes[i].cls
+          loopNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
+          nodeTree.add(loopNode, nodeTree);
+          break;
+        case 'TestNode':
+          const testNode = new TestNode(nodes[i].id, `${nodes[i].cls}.js`)
+          testNode.cls = nodes[i].cls
+          testNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
+          nodeTree.add(testNode, nodeTree);
+          break;
+        case 'FlowNode':
+          const flowNode = new FlowNode(nodes[i].id, `${nodes[i].cls}.js`)
+          flowNode.cls = nodes[i].cls
+          flowNode.position = [Number(nodes[i].x), Number(nodes[i].y)]
+          nodeTree.add(flowNode, nodeTree);
+          break;
         default:
           break;
       }
@@ -176,9 +122,9 @@ export default class About extends Vue {
       }
     }
 
-    const wf = new Workflow("wf", "wf", nodeTree, edges);
+    const f = new Flow("flow", "flow", nodeTree, edges);
 
-    this.workflow = wf;
+    this.flow = f;
   }
 }
 </script>

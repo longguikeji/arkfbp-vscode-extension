@@ -39,12 +39,10 @@ export function getCodeFromNode(node: Node, code?: string) {
 
 function getInitialCode(node: Node): string {
   const {type, cls} = node
-  const {operationType} = node as DBNode
 
-  const superCls = operationType ? `${operationType}Data` : `${type}Node`
+  const superCls = `${type}Node`
   const superClsFileName = (type === NodeType.API) ? 'apiNode'
     : (type === NodeType.IF) ? 'ifNode'
-    : (type === NodeType.DB) ? 'db/sqlite'
     : lowerFirst(superCls)
 
   return dedent`import { ${superCls} } from 'arkfbp/lib/${superClsFileName}'
@@ -89,14 +87,10 @@ export function getNodeFromCode(id: NodeID, code: string): Node {
     cls,
     type,
     properties,
-    operationType,
   } = inspectNodeCode(code)
 
   const node = makeNode(id, type as NodeType)
   node.cls = cls
-  if(operationType){
-    (node as DBNode).operationType = operationType
-  }
   Object.assign(node, properties)
 
   return node

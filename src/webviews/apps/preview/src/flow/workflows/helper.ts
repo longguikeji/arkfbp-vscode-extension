@@ -5,7 +5,7 @@ import generate from 'babel-generator'
 import dedent = require('dedent')
 import template = require('babel-template')
 
-import {Workflow} from '.'
+import {Flow} from '.'
 import {
   NodeTree,
   Node,
@@ -15,7 +15,7 @@ import {
 } from './../../flow/nodes'
 import {inspectFlowCode} from './../../flow/utils/inspect'
 
-export function getCodeFromFlow(flow: Workflow) {
+export function getCodeFromFlow(flow: Flow) {
   const nodes = flow.tree!.nodes.map(node => {
     const edges = flow.edges
       .filter(([from]) => from === node.id)
@@ -91,7 +91,7 @@ export function getCodeFromFlow(flow: Workflow) {
   return generate(program).code
 }
 
-export function getFlowFromCodes(name: string, code: string, nodeCodes: Array<{name: string, code: string}>): Workflow {
+export function getFlowFromCodes(name: string, code: string, nodeCodes: Array<{name: string, code: string}>): Flow {
   const flowData = inspectFlowCode(code)
 
   const nodeCodeMap = nodeCodes.reduce((memo, current) => {
@@ -109,7 +109,7 @@ export function getFlowFromCodes(name: string, code: string, nodeCodes: Array<{n
     aTree.add(node, aTree)
   })
 
-  return new Workflow(
+  return new Flow(
     name,
     name,
     aTree,

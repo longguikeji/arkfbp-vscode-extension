@@ -2,7 +2,6 @@ import * as babel from '@babel/core'
 import * as t from '@babel/types'
 // import BabelClassPropertiesPlugin from '@babel/plugin-proposal-class-properties'
 import { Edges } from '../workflows/index'
-import { OperationType } from '../nodes/dbNode'
 
 export function inspectFlowCode(code: string) {
 
@@ -136,8 +135,7 @@ export function inspectNodeCode(code: string) {
   const c = d.declaration as t.ClassDeclaration
   const cls = (c.id as t.Identifier).name
   const superCls = (c.superClass as t.Identifier).name
-  const type = superCls.endsWith('Node') ? superCls.replace('Node', '') : 'DB'
-  const operationType = superCls.endsWith('Data') ? superCls.replace('Data', '') as OperationType : null
+  const type = superCls.replace('Node', '')
 
   const classProperties = (d.declaration as t.ClassDeclaration).body.body
     .filter((s: any) => t.isClassProperty(s)) as t.ClassProperty[]
@@ -158,7 +156,6 @@ export function inspectNodeCode(code: string) {
     cls,
     type,
     properties,
-    operationType,
   }
 }
 

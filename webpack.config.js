@@ -90,7 +90,6 @@ function getExtensionConfig(env) {
 function getWebviewsConfig(env) {
 	const clean = ['**/*'];
 	if (env.optimizeImages) {
-		console.log('Optimizing images (src/webviews/apps/images/preview/*.png)...');
 		clean.push(path.resolve(__dirname, 'images/preview/*'));
 	}
 

@@ -35,11 +35,12 @@ export async function showCreateFlowNodeBox(flowReference?: string, node?: {type
 			'StopNode',
 			'FunctionNode',
 			'IFNode',
+			'SwitchNode',
 			'APINode',
 			'NopNode',
 			'LoopNode',
 			'TestNode',
-			'TriggerFlowNode',
+			'FlowNode',
 		],
 	{
 		placeHolder: '选择基础节点',

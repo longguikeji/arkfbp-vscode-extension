@@ -4,16 +4,15 @@ declare let fabric: any
 
 export const enum NodeType {
     NOP = 'NOP',
+    Test = 'Test',
     Start = 'Start',
     Stop = 'Stop',
     API = 'API',
     Function = 'Function',
-    TriggerEvent = 'TriggerEvent',
-    TriggerWorkflow = 'TriggerWorkflow',
-    WaitEvent = 'WaitEvent',
-    Clock = 'Clock',
+    Flow= 'Flow',
     IF = 'IF',
-    DB = 'DB',
+    Switch = 'Switch',
+    Loop = 'Loop',
 }
 
 export class Node extends fabric.Group {
@@ -321,7 +320,7 @@ export function createAPINode(id: string, left: number, top: number) {
     return node
 }
 
-export function createTriggerEventNode(id: string, left: number, top: number) {
+export function createNopNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#50B0C6',
@@ -329,9 +328,9 @@ export function createTriggerEventNode(id: string, left: number, top: number) {
         outputsFill: '#50B0C6',
 
         stroke: '#50B0C6',
-        label: 'Event',
+        label: 'Nop',
         labelFill: '#50B0C6',
-        backgroudLabel: 'E',
+        backgroudLabel: 'N',
     })
 
     node.left = left
@@ -339,7 +338,7 @@ export function createTriggerEventNode(id: string, left: number, top: number) {
     return node
 }
 
-export function createTriggerWorkflowNode(id: string, left: number, top: number) {
+export function createFlowNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#50B0C6',
@@ -357,7 +356,7 @@ export function createTriggerWorkflowNode(id: string, left: number, top: number)
     return node
 }
 
-export function createWaitEventNode(id: string, left: number, top: number) {
+export function createLoopNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#50B0C6',
@@ -365,9 +364,9 @@ export function createWaitEventNode(id: string, left: number, top: number) {
         outputsFill: '#50B0C6',
 
         stroke: '#50B0C6',
-        label: 'Wait',
+        label: 'Loop',
         labelFill: '#50B0C6',
-        backgroudLabel: 'WE',
+        backgroudLabel: 'LO',
     })
 
     node.left = left
@@ -375,7 +374,7 @@ export function createWaitEventNode(id: string, left: number, top: number) {
     return node
 }
 
-export function createClockNode(id: string, left: number, top: number) {
+export function createSwitchNode(id: string, left: number, top: number) {
     const node = makeNode(id, {
         hasInputs: true,
         inputsFill: '#50B0C6',
@@ -383,9 +382,9 @@ export function createClockNode(id: string, left: number, top: number) {
         outputsFill: '#50B0C6',
 
         stroke: '#50B0C6',
-        label: 'Clock',
+        label: 'Switch',
         labelFill: '#50B0C6',
-        backgroudLabel: 'CL',
+        backgroudLabel: 'SW',
     })
 
     node.left = left
@@ -404,6 +403,24 @@ export function createIFNode(id: string, left: number, top: number) {
         label: 'IF',
         labelFill: '#50B0C6',
         backgroudLabel: 'IF',
+    })
+
+    node.left = left
+    node.top = top
+    return node
+}
+
+export function createTestNode(id: string, left: number, top: number) {
+    const node = makeNode(id, {
+        hasInputs: true,
+        inputsFill: '#50B0C6',
+        hasOutputs: true,
+        outputsFill: '#50B0C6',
+
+        stroke: '#50B0C6',
+        label: 'Test',
+        labelFill: '#50B0C6',
+        backgroudLabel: 'TE',
     })
 
     node.left = left
