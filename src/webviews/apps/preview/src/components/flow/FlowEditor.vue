@@ -10,7 +10,7 @@ import { debounce } from "lodash";
 import { Component, Prop, Vue, Watch, Emit } from "vue-property-decorator";
 import { Editor } from "../../floweditor/editor";
 import { Node, NodeType, NodeTree, NodeID } from "../../flow/nodes";
-import { Workflow, Edge } from "../../flow/workflows";
+import { Flow, Edge } from "../../flow/workflows";
 
 @Component({})
 export default class FlowEditor extends Vue {
@@ -19,7 +19,7 @@ export default class FlowEditor extends Vue {
 
   debounceMoveNode = debounce(payload => this.moveNode(payload), 500);
 
-  @Prop({ type: Object, required: true }) workflow!: Workflow;
+  @Prop({ type: Object, required: true }) flow!: Flow;
 
   @Emit("createNode")
   createNode(payload: { type: NodeType }) {
@@ -32,7 +32,7 @@ export default class FlowEditor extends Vue {
   }
 
   @Emit("moveNode")
-  moveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
+  moveNode(payload: { flow: Flow, node: Node; x: number; y: number }) {
     return payload;
   }
 
@@ -43,15 +43,15 @@ export default class FlowEditor extends Vue {
 
   @Emit("removeSelected")
   removeSelected() {
-    return {workflow: this.workflow, selected: this.selected};
+    return {flow: this.flow, selected: this.selected};
   }
 
-  @Watch("workflow")
+  @Watch("flow")
   onShowChange() {
     if (this.editor) {
       this.editor.clear();
     }
-    if (this.workflow) {
+    if (this.flow) {
       this.renderGraph();
     }
     this.selected = null;
@@ -79,7 +79,7 @@ export default class FlowEditor extends Vue {
 
     this.editor = new Editor("c", {
       onNodeSelected: (id: string) => {
-        const node = this.workflow.getNodeById(id);
+        const node = this.flow.getNodeById(id);
         const selectedNode = this.selected instanceof Node ? this.selected : null;
         if(!selectedNode || selectedNode.id !== id){
             this.selectNode({node});
@@ -90,12 +90,12 @@ export default class FlowEditor extends Vue {
         this.selected = [from.id, to.id];
       },
       onNodeMoving: (id: string, x: number, y: number) => {
-        const node = this.workflow.getNodeById(id);
-        this.debounceMoveNode({ workflow: this.workflow , node, x, y });
+        const node = this.flow.getNodeById(id);
+        this.debounceMoveNode({ flow: this.flow , node, x, y });
       },
       onConnect: (fromId: string, toId: string) => {
-        const from = this.workflow.getNodeById(fromId);
-        const to = this.workflow.getNodeById(toId);
+        const from = this.flow.getNodeById(fromId);
+        const to = this.flow.getNodeById(toId);
         if (from != null && to != null) {
             this.createEdge({ from, to });
         }
@@ -105,7 +105,7 @@ export default class FlowEditor extends Vue {
 
   renderGraph() {
     const editor = this.editor!;
-    const { tree, edges } = this.workflow;
+    const { tree, edges } = this.flow;
 
     const mapping = new Map();
 
@@ -135,7 +135,7 @@ export default class FlowEditor extends Vue {
 
   mounted() {
     this.renderEditor();
-    if (this.workflow) {
+    if (this.flow) {
       this.renderGraph();
     }
   }

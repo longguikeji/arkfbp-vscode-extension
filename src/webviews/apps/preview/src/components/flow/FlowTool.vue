@@ -10,7 +10,7 @@
         <div class="tool-item"><div @click="createNodeSwitch">SWITCH</div></div>
         <div class="tool-item"><div @click="createNodeApi">API</div></div>
         <div class="tool-item"><div @click="createNodeLoop">LOOP</div></div>
-        <div class="tool-item"><div @click="createNodeWorkflow">FLOW</div></div>
+        <div class="tool-item"><div @click="createNodeFlow">FLOW</div></div>
          <div class="tool-item"><div @click="createNodeTest">TEST</div></div>
         <div class="tool-item"><div @click="createNodeNop">NOP</div></div>
         <div class="tool-item"><div @click="createNodeStop">STOP</div></div>
@@ -24,9 +24,9 @@
 </template>
 
 <script lang="ts">
-import {Vue, Component, Prop, Watch, Emit} from 'vue-property-decorator'
-import {NodeType} from '../../flow/nodes'
-import {Workflow} from '../../flow/workflows'
+import { Vue, Component, Prop, Watch, Emit } from 'vue-property-decorator'
+import { NodeType } from '../../flow/nodes'
+import { Flow } from '../../flow/workflows'
 
 @Component({
   components: {
@@ -45,7 +45,7 @@ export default class FlowTool extends Vue {
   createNodeFunction() {this.createNode({type: NodeType.Function})}
   createNodeIf() {this.createNode({type: NodeType.IF})}
   createNodeApi() {this.createNode({type: NodeType.API})}
-  createNodeWorkflow() {this.createNode({type: NodeType.TriggerWorkflow})}
+  createNodeFlow() {this.createNode({type: NodeType.Flow})}
   createNodeSwitch() {this.createNode({type: NodeType.Switch})}
   createNodeLoop() {this.createNode({type: NodeType.Loop})}
   createNodeTest() {this.createNode({type: NodeType.Test})}

@@ -1,4 +1,4 @@
-import { Workflow, Edge } from "./../flow/workflows/";
+import { Flow, Edge } from "./../flow/workflows/";
 import { NodeType, Node } from "./../flow/nodes";
 import { NodeID } from './../flow/nodes/node'
 
@@ -28,9 +28,9 @@ function selectNode(payload: { node: Node }) {
   })
 }
 
-function moveNode(payload: { workflow: Workflow, node: Node; x: number; y: number }) {
-  const { workflow, node, x, y } = payload
-  const edge = workflow.edges.find((item: Edge) => item[0] === node.id)
+function moveNode(payload: { flow: Flow, node: Node; x: number; y: number }) {
+  const { flow, node, x, y } = payload
+  const edge = flow.edges.find((item: Edge) => item[0] === node.id)
   acquireApi.postMessage({
     command: 'moveNode',
     node: {
@@ -59,10 +59,10 @@ function createEdge(payload: { from: Node; to: Node }) {
   })
 }
 
-function removeSelected(payload: {workflow: Workflow, selected: Node | [NodeID, NodeID]}) {
-  const { workflow, selected } = payload
+function removeSelected(payload: {flow: Flow, selected: Node | [NodeID, NodeID]}) {
+  const { flow, selected } = payload
   if(Array.isArray(selected)) {
-    const node = workflow.getNodeById(payload[0])
+    const node = flow.getNodeById(payload[0])
     acquireApi.postMessage({
       command: 'removeEdge',
       node: {
@@ -88,8 +88,8 @@ function removeSelected(payload: {workflow: Workflow, selected: Node | [NodeID, 
       }
     })
   
-    workflow.edges.forEach((item: [NodeID, NodeID]) => {
-      const node = workflow.getNodeById(item[0])
+    flow.edges.forEach((item: [NodeID, NodeID]) => {
+      const node = flow.getNodeById(item[0])
       if(item[1] === selected.id) {
         acquireApi.postMessage({
           command: 'removeEdge',

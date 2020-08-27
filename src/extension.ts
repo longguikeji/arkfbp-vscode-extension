@@ -121,6 +121,8 @@ export async function activate(context: ExtensionContext) {
 		rootPath,
 		terminal,
 	);
+	const previewWebviewList: PreviewWebview[] = []
+
 	vscode.window.registerTreeDataProvider("arkfbp.explorer.flow", flowProvider);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.refresh", () => flowProvider.refresh())
@@ -161,8 +163,16 @@ export async function activate(context: ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flow.action.openGraphDefinitionFile', async (flow: string) => {
 			const graphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flow);
-			vscode.workspace.openTextDocument(graphDefinitionFile).then(doc => {
-				vscode.window.showTextDocument(doc);
+
+			await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
+			await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup');
+
+			await vscode.workspace.openTextDocument(graphDefinitionFile).then(doc => {
+				vscode.window.showTextDocument(doc).then(async () => {
+					await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+
+					vscode.commands.executeCommand('arkfbp.graph.preview', graphDefinitionFile);
+				});
 			});
 		})
 	);
@@ -173,18 +183,6 @@ export async function activate(context: ExtensionContext) {
 	);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.run", (item: FlowTreeItem) => flowProvider.run(item))
-	);
-	context.subscriptions.push(
-		vscode.commands.registerCommand("arkfbp.explorer.flow.action.open", async (item: any) => {
-			const flow = item.reference;
-			const graphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flow);
-			vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows')
-			await vscode.workspace.openTextDocument(graphDefinitionFile).then(doc => {
-				vscode.window.showTextDocument(doc).then(async () => {
-					vscode.commands.executeCommand('arkfbp.graph.preview');
-				});
-			});
-		})
 	);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.flow.action.rename", async (item: any) => {
@@ -273,6 +271,9 @@ export async function activate(context: ExtensionContext) {
 				vscode.window.showWarningMessage('多于一个的定义文件，默认显示第一个匹配的文件');
 			}
 
+			await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows')
+			await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup')
+
 			await vscode.workspace.openTextDocument(files[0]).then(doc => {
 				vscode.window.showTextDocument(doc);
 			});
@@ -283,17 +284,19 @@ export async function activate(context: ExtensionContext) {
 	 * Preview the Graph
 	 */
 	context.subscriptions.push(
-		vscode.commands.registerCommand('arkfbp.graph.preview', () => {
-			const editor = vscode.window.activeTextEditor;
-			if (!editor) {
-				return;
-			}
+		vscode.commands.registerCommand('arkfbp.graph.preview', (graphFilePath) => {
+			if (graphFilePath) {
+				// GraphPreviewPanel.createOrShow(context.extensionPath, graphDefinitionFile);
+				const previewWebview = previewWebviewList.find((item: PreviewWebview) => item.graphFilePath === graphFilePath)
 
-			const flowDir = getArkFBPFlowDirByDocument(editor.document);
-			if (flowDir !== '') {
-				// GraphPreviewPanel.createOrShow(context.extensionPath, path.join(flowDir, 'index.js'));
-				const v = new PreviewWebview(context, path.join(flowDir, 'index.js'));
-				v.show(path.join(flowDir, 'index.js'));
+				if(previewWebview) {
+					previewWebview.show(graphFilePath);
+				} else {
+					const pw = new PreviewWebview(context, graphFilePath);
+					pw.show(graphFilePath);
+
+					previewWebviewList.push(pw);
+				}
 			}
 		})
 	);

@@ -69,6 +69,10 @@ export class PreviewWebview extends WebviewBase {
 		}
 	}
 
+	get graphFilePath() {
+		return this._graphFilePath;
+	}
+
 	get filename(): string {
 		return 'preview.html';
 	}

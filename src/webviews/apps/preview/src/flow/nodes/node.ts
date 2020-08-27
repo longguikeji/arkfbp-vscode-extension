@@ -11,14 +11,10 @@ export const enum NodeType {
     Stop = 'Stop',
     API = 'API',
     Function = 'Function',
-    TriggerWorkflow = 'TriggerWorkflow',
+    Flow = 'Flow',
     IF = 'IF',
     Switch = 'Switch',
     Loop = 'Loop',
-    TriggerEvent = 'TriggerEvent',
-    WaitEvent = 'WaitEvent',
-    Clock = 'Clock',
-    DB = 'DB',
 }
 
 

@@ -8,11 +8,12 @@ import {
     createStartNode,
     createStopNode,
     createFunctionNode,
-    createTriggerEventNode,
-    createTriggerWorkflowNode,
-    createWaitEventNode,
-    createClockNode,
+    createNopNode,
+    createFlowNode,
+    createLoopNode,
+    createSwitchNode,
     createIFNode,
+    createTestNode,
 } from './node'
 import {
     CURVE,
@@ -167,20 +168,23 @@ export class Editor {
             case NodeType.API:
                 node = createAPINode(id, left, top)
                 break
-            case NodeType.TriggerEvent:
-                node = createTriggerEventNode(id, left, top)
+            case NodeType.NOP:
+                node = createNopNode(id, left, top)
                 break
-            case NodeType.TriggerWorkflow:
-                node = createTriggerWorkflowNode(id, left, top)
+            case NodeType.Flow:
+                node = createFlowNode(id, left, top)
                 break
-            case NodeType.WaitEvent:
-                node = createWaitEventNode(id, left, top)
+            case NodeType.Loop:
+                node = createLoopNode(id, left, top)
                 break
-            case NodeType.Clock:
-                node = createClockNode(id, left, top)
+            case NodeType.Switch:
+                node = createSwitchNode(id, left, top)
                 break
             case NodeType.IF:
                 node = createIFNode(id, left, top)
+                break
+            case NodeType.Test:
+                node = createTestNode(id, left, top)
                 break
             default:
         }

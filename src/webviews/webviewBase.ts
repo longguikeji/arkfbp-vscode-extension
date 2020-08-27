@@ -179,7 +179,7 @@ export abstract class WebviewBase implements Disposable {
 			this._disposablePanel = Disposable.from(
 				this._panel,
 				this._panel.onDidDispose(this.onPanelDisposed, this),
-				//this._panel.onDidChangeViewState(this.onViewStateChanged, this),
+				// this._panel.onDidChangeViewState(this.onViewStateChanged, this),
 				this._panel.webview.onDidReceiveMessage(this.onMessageReceivedCore, this),
 				...this.registerCommands()
 			);
@@ -288,7 +288,6 @@ export abstract class WebviewBase implements Disposable {
 						this.resetPanel();
 						return;
 					case 'selectNode':
-						console.info(message.node, 'message.node')
 						openNodeFileFromGraph(graphFilePath, message.node);
 						return;
 					case 'moveNode':

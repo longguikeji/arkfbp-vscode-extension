@@ -592,28 +592,19 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
         return;
     }
 
-    const editor = vscode.window.activeTextEditor;
-    if (editor !== undefined) {
-        fs.writeFileSync(graphFilePath, result.code);
-        vscode.workspace.openTextDocument(graphFilePath).then(doc => {
-            vscode.window.showTextDocument(doc);
-        });
-    } else {
-        fs.writeFileSync(graphFilePath, result.code);
-    }
+    fs.writeFileSync(graphFilePath, result.code);
 }
 
 export async function openNodeFileFromGraph(graphFilePath: string, node: {cls: string}) {
     const flowDir = path.dirname(graphFilePath);
     const files = findNodeFilesByClass(flowDir, node.cls);
-    
+
+    await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows')
     await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup')
 
     await vscode.workspace.openTextDocument(files[0]).then(doc => {
         vscode.window.showTextDocument(doc);
     });
-
-    await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup')
 }
 
 export function createDatabase(options: { name: string }): boolean {
