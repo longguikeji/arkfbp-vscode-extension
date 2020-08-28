@@ -20,7 +20,7 @@ import {
 
 import { O_SYMLINK } from 'constants';
 import { resolve } from 'dns';
-import { FlowTreeItem } from './flowTreeItem';
+import { FlowTreeItem } from './flowTreeItem1';
 
 import { GraphPreviewPanel } from './graph';
 import { PreviewWebview } from './webviews/previewWebview';

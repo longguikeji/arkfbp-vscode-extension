@@ -11,9 +11,9 @@ import {
   import * as vscode from "vscode";
   import * as fs from "fs";
   import * as path from "path";
-  import { FlowTreeItem } from "./flowTreeItem";
+  import { FlowTreeItem } from "./flowTreeItem1";
   import { ScriptEventEmitter, MaybeScript } from "./types";
-  import { FlowDirTreeItem } from "./flowDirTreeItem";
+  import { FlowDirTreeItem } from "./flowDirTreeItem1";
   import * as yaml from 'js-yaml';
 
   import * as arkfbp from './arkfbp';
