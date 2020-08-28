@@ -4,7 +4,7 @@ import { fabric } from 'fabric'
 export const CURVE = 50
 
 
-export class Edge extends fabric.Group {
+export class Edge extends (fabric as any).Group {
 
   type = 'edge'
 

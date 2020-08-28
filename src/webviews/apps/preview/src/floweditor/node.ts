@@ -14,7 +14,7 @@ export const enum NodeType {
     Loop = 'Loop',
 }
 
-export class Node extends fabric.Group {
+export class Node extends (fabric as any).Group {
 
     type = 'node'
 
