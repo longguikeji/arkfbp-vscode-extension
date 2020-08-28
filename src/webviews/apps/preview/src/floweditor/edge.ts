@@ -4,17 +4,17 @@ import { fabric } from 'fabric'
 export const CURVE = 50
 
 
-export class Edge extends (fabric as any).Group {
+export class Edge extends fabric.Group {
 
   type = 'edge'
 
   private _from: Node | null = null
   private _to: Node | null = null
 
-  private _line: fabric.Object
-  private _arrow: fabric.Object
+  private _line: any
+  private _arrow: any
 
-  constructor(objects?: fabric.Object[], options?: fabric.IGroupOptions) {
+  constructor(objects?: any, options?: any) {
     super(objects, options || {})
 
     this._line = objects![0]
@@ -37,25 +37,25 @@ export class Edge extends (fabric as any).Group {
     this._to = value
   }
 
-  get line(): fabric.Object {
+  get line() {
     return this._line
   }
 
-  set line(value: fabric.Object) {
+  set line(value: any) {
     this._line = value
   }
 
-  get arrow(): fabric.Object {
+  get arrow() {
     return this._arrow
   }
 
-  set arrow(value: fabric.Object) {
+  set arrow(value: any) {
     this._arrow = value
   }
 }
 
 export function createEdgeXY(
-  canvas: fabric.Canvas,
+  canvas: any,
   sx: number, sy: number,
   tx: number, ty: number,
   iw: number, ih: number, edge?: Edge,
@@ -142,7 +142,7 @@ export function createEdgeXY(
   return e
 }
 
-export function createEdge(canvas: fabric.Canvas, from: Node, to: Node): Edge | null {
+export function createEdge(canvas: any, from: Node, to: Node): Edge | null {
   const sourceX = from.left + from.width - 3
   const sourceY = from.top + from.height / 2 + 3
   const targetX = to.left + 1
@@ -159,7 +159,7 @@ export function createEdge(canvas: fabric.Canvas, from: Node, to: Node): Edge | 
   return edge
 }
 
-export function updateEdge(canvas: fabric.Canvas, edge: Edge, from: Node, to: Node): Edge | null {
+export function updateEdge(canvas: any, edge: Edge, from: Node, to: Node): Edge | null {
   edge.remove(edge.line)
   edge.remove(edge.arrow)
 
@@ -176,7 +176,7 @@ export function updateEdge(canvas: fabric.Canvas, edge: Edge, from: Node, to: No
 }
 
 export function updateEdgeXY(
-  canvas: fabric.Canvas,
+  canvas: any,
   edge: Edge,
   sx: number, sy: number,
   tx: number, ty: number,

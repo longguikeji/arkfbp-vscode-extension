@@ -1,5 +1,5 @@
 {
-  "name": "hello-world",
+  "name": "webview",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "@babel/core": "^7.9.0",
-    "ant-design-vue": "^1.4.1",
     "babel-generator": "^6.26.1",
     "babel-template": "^6.26.0",
     "core-js": "^3.6.4",
+    "uuid": "^7.0.3",
     "dedent": "^0.7.0",
     "fabric": "^4.0.0-beta.7",
     "jsonschema": "^1.2.6",

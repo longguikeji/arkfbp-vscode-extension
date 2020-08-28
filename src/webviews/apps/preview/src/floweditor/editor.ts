@@ -28,7 +28,7 @@ import {
 export class Editor {
 
     private _id = 0
-    private _canvas: fabric.Canvas
+    private _canvas: any
 
     private isDragging = false
     private selection = false
@@ -69,7 +69,7 @@ export class Editor {
             return
         }
 
-        const newGroup = (this._canvas.getActiveObject() as fabric.ActiveSelection).toGroup() as fabric.Group
+        const newGroup = this._canvas.getActiveObject().toGroup()
 
         const bg = new fabric.Rect({
             left: 0 - newGroup.get('width')! / 2 - 10,
@@ -94,7 +94,7 @@ export class Editor {
             return
         }
 
-        const group = this._canvas.getActiveObject() as fabric.Group
+        const group = this._canvas.getActiveObject()
         group.removeWithUpdate(group.item(0))
         group.toActiveSelection()
         this._canvas.requestRenderAll()
@@ -129,7 +129,7 @@ export class Editor {
     add(node: Node) {
         let left = node.left
         let top = node.top
-        this._canvas.getObjects().map((o: fabric.Object) => {
+        this._canvas.getObjects().map((o: any) => {
             if (o.type !== 'node') {
                 return
             }
@@ -210,7 +210,7 @@ export class Editor {
         return this._id.toString()
     }
 
-    private addToCanvas(o: fabric.Object) {
+    private addToCanvas(o: any) {
         this._canvas.add(o)
     }
 
@@ -599,7 +599,7 @@ export class Editor {
         this._canvas.renderAll()
     }
 
-    private onMouseout = (e: fabric.IEvent) => {
+    private onMouseout = (e: any) => {
         const target = e.target
         if (!target) {
             return
