@@ -127,7 +127,7 @@ export class PayloadSchema {
     _toSchema(field: Field & Schema) {
         // update required
         field.required = field.properties
-            ? Array.from(Object.entries(field.properties))
+            ? Array.from(Object.entries(field.properties! as object))
                 .filter(([k, v]) => v.isRequired)
                 .map(([k, v]) => v.name)
             : []
