@@ -62,7 +62,7 @@ function createEdge(payload: { from: Node; to: Node }) {
 function removeSelected(payload: {flow: Flow, selected: Node | [NodeID, NodeID]}) {
   const { flow, selected } = payload
   if(Array.isArray(selected)) {
-    const node = flow.getNodeById(payload[0])
+    const node = flow.getNodeById(selected[0]) as Node
     acquireApi.postMessage({
       command: 'removeEdge',
       node: {
@@ -88,8 +88,8 @@ function removeSelected(payload: {flow: Flow, selected: Node | [NodeID, NodeID]}
       }
     })
   
-    flow.edges.forEach((item: [NodeID, NodeID]) => {
-      const node = flow.getNodeById(item[0])
+    flow.edges.forEach((item: Edge) => {
+      const node = flow.getNodeById(item[0]) as Node
       if(item[1] === selected.id) {
         acquireApi.postMessage({
           command: 'removeEdge',

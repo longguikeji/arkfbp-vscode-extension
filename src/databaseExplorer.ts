@@ -90,6 +90,10 @@ export class DatabaseProvider
 
   async create() {
     const result = await showCreateDatabaseBox();
+    if(!result) {
+      return;
+    }
+
     arkfbp.createDatabase({name: result});
     this.refresh();
   }

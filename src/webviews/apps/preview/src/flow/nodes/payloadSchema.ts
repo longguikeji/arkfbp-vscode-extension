@@ -1,6 +1,6 @@
-import uuid from 'uuid/v4'
+import uuid = require('uuid/v4')
+import _get = require('lodash/get')
 import { Schema } from 'jsonschema'
-import _get from 'lodash/get'
 import { Field, FieldType } from './schemaField'
 
 export class PayloadSchema {

@@ -1,5 +1,4 @@
-import 'fabric'
-declare let fabric: any
+import { fabric } from 'fabric'
 
 import {
     Node,

@@ -119,9 +119,9 @@ export async function activate(context: ExtensionContext) {
 	const flowProvider: FlowsProvider = new FlowsProvider(
 		context,
 		rootPath,
-		terminal,
+		terminal
 	);
-	const previewWebviewList: PreviewWebview[] = []
+	const previewWebviewList: PreviewWebview[] = [];
 
 	vscode.window.registerTreeDataProvider("arkfbp.explorer.flow", flowProvider);
 	context.subscriptions.push(
@@ -271,8 +271,8 @@ export async function activate(context: ExtensionContext) {
 				vscode.window.showWarningMessage('多于一个的定义文件，默认显示第一个匹配的文件');
 			}
 
-			await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows')
-			await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup')
+			await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
+			await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup');
 
 			await vscode.workspace.openTextDocument(files[0]).then(doc => {
 				vscode.window.showTextDocument(doc);
@@ -287,7 +287,7 @@ export async function activate(context: ExtensionContext) {
 		vscode.commands.registerCommand('arkfbp.graph.preview', (graphFilePath) => {
 			if (graphFilePath) {
 				// GraphPreviewPanel.createOrShow(context.extensionPath, graphDefinitionFile);
-				const previewWebview = previewWebviewList.find((item: PreviewWebview) => item.graphFilePath === graphFilePath)
+				const previewWebview = previewWebviewList.find((item: PreviewWebview) => item.graphFilePath === graphFilePath);
 
 				if(previewWebview) {
 					previewWebview.show(graphFilePath);

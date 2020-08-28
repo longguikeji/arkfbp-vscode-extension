@@ -71,11 +71,13 @@ export class FlowsProvider
 
   async rename(dir: string, label: string) {
     const result = await showCreateFlowFolderBox(label);
-    if (result !== null || result !== undefined) {
-      fs.rename(path.join(dir, label), path.join(dir, result), () => {
-        this.refresh();
-      });
+    if(!result) {
+      return;
     }
+
+    fs.rename(path.join(dir, label), path.join(dir, result), () => {
+      this.refresh();
+    });
   }
 
   copy(p: string) {
@@ -101,6 +103,10 @@ export class FlowsProvider
     const flowName = item.reference;
 
     const inputs = await box.showRunFlowInputsBox();
+
+    if(!inputs) {
+      return;
+    }
 
     arkfbp.runFlow(this.workspaceRoot, this.terminal, flowName, inputs.format, inputs.data);
   }

@@ -21,7 +21,7 @@ export async function showRunFlowInputsBox() {
 	});
 
 	return {
-        format: inputsFormat,
-        data: inputs,
-    };
+		format: inputsFormat || '',
+		data: inputs || '',
+	};
 }

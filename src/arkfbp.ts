@@ -88,7 +88,6 @@ export function getArkFBPFlows(dir: string, includeGroup: boolean = false): (str
     return flows;
 }
 
-
 export function getDatabaseRootDir(root?: string): string {
     if (root === undefined) {
         root = getArkFBPAppDir();
@@ -393,7 +392,7 @@ export function getGraphFilePath(flow: string): string {
 }
 
 export function getFlowReference(graphFilePath: string): string {
-    return graphFilePath.split('/').slice(-4, -1).join('.')
+    return graphFilePath.split('/').slice(-4, -1).join('.');
 }
 
 /**
@@ -494,13 +493,13 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
             case 'createNode':
                 return [myImportInjector, myNodesInjector];
             case 'moveNode':
-                return [myNodesInjector]
+                return [myNodesInjector];
             case 'removeNode':
-                return [myImportInjector, myNodesInjector]
+                return [myImportInjector, myNodesInjector];
             case 'updateEdge':
-                return [myNodesInjector]
+                return [myNodesInjector];
             default:
-                break
+                break;
         }
     }
 
@@ -517,9 +516,9 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
                             }
                             break;
                         case 'removeNode':
-                            path.parent.program.body = path.parent.program.body.filter((e: any) => e.type !== 'ImportDeclaration' || e.specifiers[0].local.name !== node.cls )
+                            path.parent.program.body = path.parent.program.body.filter((e: any) => e.type !== 'ImportDeclaration' || e.specifiers[0].local.name !== node.cls);
                         default:
-                            break
+                            break;
                     }
                 },
             },
@@ -532,7 +531,7 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
                 ClassMethod(path: any, state: any) {
                     if (path.node.key.name === 'createNodes') {
                         const returnStatement = path.node.body.body[0];
-                        const arrayExpression = returnStatement.argument as babelTypes.ArrayExpression;
+                        const arrayExpression = returnStatement.argument as any;
                         const o1 = babelTypes.objectProperty(babelTypes.identifier('cls'), babelTypes.identifier(node.cls));
                         const o2 = babelTypes.objectProperty(babelTypes.identifier('id'), babelTypes.stringLiteral(node.id));
                         const o3 = babelTypes.objectProperty(babelTypes.identifier('x'), babelTypes.numericLiteral(node.x));
@@ -541,44 +540,44 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
 
                         switch (actionType) {
                             case 'createNode':
-                                arrayExpression.elements.push(babelTypes.objectExpression([o1, o2, o3, o4]))
+                                arrayExpression.elements.push(babelTypes.objectExpression([o1, o2, o3, o4]));
                                 break;
                             case 'moveNode':
-                                arrayExpression.elements.forEach((item: babelTypes.ObjectExpression) => {
-                                    if(((item.properties.find((e: babelTypes.ObjectProperty) => e.key.name === 'id') as babelTypes.ObjectProperty).value as babelTypes.StringLiteral).value === node.id) {
-                                        if(!item.properties.some((e: babelTypes.ObjectProperty) => e.key.name === 'x')){
-                                            item.properties.push(o3)
+                                arrayExpression.elements.forEach((item: any) => {
+                                    if(item.properties.find((e: any) => e.key.name === 'id').value.value === node.id) {
+                                        if(!item.properties.some((e: any) => e.key.name === 'x')){
+                                            item.properties.push(o3);
                                         }
-                                        if(!item.properties.some((e: babelTypes.ObjectProperty) => e.key.name === 'y')){
-                                            item.properties.push(o4)
+                                        if(!item.properties.some((e: any) => e.key.name === 'y')){
+                                            item.properties.push(o4);
                                         }
-                                        item.properties = item.properties.map((m: babelTypes.ObjectProperty) => {
+                                        item.properties = item.properties.map((m: any) => {
                                             if(m.key.name === 'x') {
-                                                (m.value as babelTypes.NumberLiteral).value = node.x
-                                                return m
+                                                m.value.value = node.x;
+                                                return m;
                                             } else if(m.key.name === 'y') {
-                                                (m.value as babelTypes.NumberLiteral).value = node.y
-                                                return m
+                                                m.value.value = node.y;
+                                                return m;
                                             } else {
-                                                return m
+                                                return m;
                                             }
-                                        })
+                                        });
                                     }
-                                })
+                                });
                                 break;
                             case 'removeNode':
-                                arrayExpression.elements = arrayExpression.elements.filter((item: babelTypes.ObjectExpression) => 
-                                    ((item.properties.find((e: babelTypes.ObjectProperty) => e.key.name === 'id') as babelTypes.ObjectProperty).value as babelTypes.StringLiteral).value !== node.id
-                                )
+                                arrayExpression.elements = arrayExpression.elements.filter((item: any) => 
+                                    item.properties.find((e: any) => e.key.name === 'id').value.value !== node.id
+                                );
                                 break;
                             case 'updateEdge':
-                                arrayExpression.elements = arrayExpression.elements.map((item: babelTypes.ObjectExpression) => {
-                                    if(((item.properties.find((e: babelTypes.ObjectProperty) => e.key.name === 'id') as babelTypes.ObjectProperty).value as babelTypes.StringLiteral).value === node.id) {
-                                        return babelTypes.objectExpression(o5 ? [o1, o2, o3, o4, o5] : [o1, o2, o3, o4])
+                                arrayExpression.elements = arrayExpression.elements.map((item: any) => {
+                                    if(item.properties.find((e: any) => e.key.name === 'id').value.value === node.id) {
+                                        return babelTypes.objectExpression(o5 ? [o1, o2, o3, o4, o5] : [o1, o2, o3, o4]);
                                     } else {
-                                        return item
+                                        return item;
                                     }
-                                })
+                                });
                             default:
                                 break;
                         }
@@ -586,7 +585,7 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
                 }
             },
         };
-    }
+    };
 
     if (!result){
         return;
@@ -599,8 +598,8 @@ export async function openNodeFileFromGraph(graphFilePath: string, node: {cls: s
     const flowDir = path.dirname(graphFilePath);
     const files = findNodeFilesByClass(flowDir, node.cls);
 
-    await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows')
-    await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup')
+    await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
+    await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup');
 
     await vscode.workspace.openTextDocument(files[0]).then(doc => {
         vscode.window.showTextDocument(doc);
