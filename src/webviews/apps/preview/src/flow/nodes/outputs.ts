@@ -1,5 +1,5 @@
-import uuid from 'uuid/v4'
-import dedent from 'dedent'
+import uuid = require('uuid/v4')
+import dedent = require('dedent')
 import { Field, FieldType } from './field'
 
 export class Outputs {

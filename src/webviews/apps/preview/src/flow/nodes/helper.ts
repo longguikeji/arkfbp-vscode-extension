@@ -1,10 +1,10 @@
-import dedent from 'dedent'
+import dedent = require('dedent')
 import * as babel from '@babel/core'
 import * as t from '@babel/types'
-import template from 'babel-template'
+import template = require('babel-template')
 import generate from 'babel-generator'
 // import BabelClassPropertiesPlugin from '@babel/plugin-proposal-class-properties'
-import lowerFirst from 'lodash/lowerFirst'
+import lowerFirst = require('lodash/lowerFirst')
 import {inspectNodeCode} from '../../flow/utils/inspect'
 
 import {

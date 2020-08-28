@@ -1,7 +1,5 @@
 import * as t from '@babel/types'
 import generate from 'babel-generator'
-// import template from 'babel-template'
-// import dedent from 'dedent'
 import dedent = require('dedent')
 import template = require('babel-template')
 

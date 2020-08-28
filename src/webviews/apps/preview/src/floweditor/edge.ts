@@ -1,6 +1,5 @@
 import { Node } from './node'
-
-declare let fabric: any
+import { fabric } from 'fabric'
 
 export const CURVE = 50
 

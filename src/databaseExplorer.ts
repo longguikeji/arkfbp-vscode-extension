@@ -9,9 +9,9 @@ import {
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { FlowTreeItem } from "./flowTreeItem1";
+import { FlowTreeItem } from "./flowTreeItem";
 import { ScriptEventEmitter, MaybeScript } from "./types";
-import { FlowDirTreeItem } from "./flowDirTreeItem1";
+import { FlowDirTreeItem } from "./flowDirTreeItem";
 
 import { getArkFBPAppDir } from './arkfbp';
 import * as arkfbp from './arkfbp';
@@ -90,6 +90,10 @@ export class DatabaseProvider
 
   async create() {
     const result = await showCreateDatabaseBox();
+    if(!result) {
+      return;
+    }
+
     arkfbp.createDatabase({name: result});
     this.refresh();
   }

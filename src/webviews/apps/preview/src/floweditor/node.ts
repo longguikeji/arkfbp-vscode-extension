@@ -1,6 +1,5 @@
-import 'fabric'
 import { Edge } from './edge'
-declare let fabric: any
+import { fabric } from 'fabric'
 
 export const enum NodeType {
     NOP = 'NOP',

@@ -22,7 +22,7 @@ import {
 } from './protocol';
 import { ExtensionContext } from 'vscode';
 import { getFlowReference, updateFlowGraph, openNodeFileFromGraph } from './../arkfbp';
-import { showCreateFlowNodeBox } from './../createFlowNodeBox'
+import { showCreateFlowNodeBox } from './../createFlowNodeBox';
 // import { Commands } from '../commands';
 
 let ipcSequence = 0;
@@ -188,13 +188,17 @@ export abstract class WebviewBase implements Disposable {
 
 			this.getMessage(graphFilePath);
 		} else {
-			this.resetPanel()
+			this.resetPanel();
 		}
 	}
 
 	// Reset the html to get the webview to reload
 	async resetPanel() {
 		const html = await this.getHtml();
+
+		if (this._panel === undefined) {
+			return;
+		}
 		
 		this._panel.webview.html = '';
 		this._panel.webview.html = html;
@@ -279,11 +283,15 @@ export abstract class WebviewBase implements Disposable {
 	
 	// Handle messages from the webview
 	private getMessage(graphFilePath: string) {
+		if(this._panel === undefined) {
+			return;
+		}
+		
 		this._panel.webview.onDidReceiveMessage( 
-			 async (message) => {
+			 async (message: any) => {
 				switch (message.command) {
 					case 'createNode':
-						const flowReference = getFlowReference(graphFilePath)
+						const flowReference = getFlowReference(graphFilePath);
 						await showCreateFlowNodeBox(flowReference, message.node);
 						this.resetPanel();
 						return;
