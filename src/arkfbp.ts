@@ -478,10 +478,10 @@ export function createNode(options: { flow: string, base: string, class: string,
 export function updateFlowGraph(actionType: string, graphFilePath: string, node: {
     id: string,
     cls: string,
-    filename: string,
+    filename?: string,
     next?: string,
-    x: number,
-    y: number,
+    x?: number,
+    y?: number,
 }) {
     const code = fs.readFileSync(graphFilePath).toString();
     const result = babel.transform(code, {
@@ -504,7 +504,7 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
     }
 
     function myImportInjector({ type, template }: { type: any, template: any}) {
-        const myImport = template(`import { ${node.cls} } from "./nodes/${node.filename}";`, { sourceType: "module" });
+        const myImport = template(`import { ${node.cls} } from "./nodes/${node.filename!}";`, { sourceType: "module" });
         return {
             visitor: {
                 Program(path: any, state: any) {
@@ -534,22 +534,22 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
                         const arrayExpression = returnStatement.argument as any;
                         const o1 = babelTypes.objectProperty(babelTypes.identifier('cls'), babelTypes.identifier(node.cls));
                         const o2 = babelTypes.objectProperty(babelTypes.identifier('id'), babelTypes.stringLiteral(node.id));
-                        const o3 = babelTypes.objectProperty(babelTypes.identifier('x'), babelTypes.numericLiteral(node.x));
-                        const o4 = babelTypes.objectProperty(babelTypes.identifier('y'), babelTypes.numericLiteral(node.y));
+                        const o3 = node.x ? babelTypes.objectProperty(babelTypes.identifier('x'), babelTypes.numericLiteral(node.x)): null;
+                        const o4 = node.y ? babelTypes.objectProperty(babelTypes.identifier('y'), babelTypes.numericLiteral(node.y)): null;
                         const o5 = node.next ? babelTypes.objectProperty(babelTypes.identifier('next'), babelTypes.stringLiteral(node.next)): null;
 
                         switch (actionType) {
                             case 'createNode':
-                                arrayExpression.elements.push(babelTypes.objectExpression([o1, o2, o3, o4]));
+                                arrayExpression.elements.push(babelTypes.objectExpression([o1, o2, o3!, o4!]));
                                 break;
                             case 'moveNode':
                                 arrayExpression.elements.forEach((item: any) => {
                                     if(item.properties.find((e: any) => e.key.name === 'id').value.value === node.id) {
                                         if(!item.properties.some((e: any) => e.key.name === 'x')){
-                                            item.properties.push(o3);
+                                            item.properties.push(o3!);
                                         }
                                         if(!item.properties.some((e: any) => e.key.name === 'y')){
-                                            item.properties.push(o4);
+                                            item.properties.push(o4!);
                                         }
                                         item.properties = item.properties.map((m: any) => {
                                             if(m.key.name === 'x') {
@@ -573,7 +573,7 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
                             case 'updateEdge':
                                 arrayExpression.elements = arrayExpression.elements.map((item: any) => {
                                     if(item.properties.find((e: any) => e.key.name === 'id').value.value === node.id) {
-                                        return babelTypes.objectExpression(o5 ? [o1, o2, o3, o4, o5] : [o1, o2, o3, o4]);
+                                        return babelTypes.objectExpression(o5 ? [o1, o2, o3!, o4!, o5] : [o1, o2, o3!, o4!]);
                                     } else {
                                         return item;
                                     }
