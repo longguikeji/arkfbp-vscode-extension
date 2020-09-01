@@ -52,7 +52,7 @@ export class Table {
 
         this.version = obj.version;
 
-        if (obj.hasOwnProperty('columns')) {
+        if (Object.prototype.hasOwnProperty.call(obj, 'columns')) {
             const columns: Column[] = [];
             obj.columns!.forEach((element: any) => {
                 const name = element.name;

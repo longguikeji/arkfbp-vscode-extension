@@ -79,7 +79,7 @@ export class PayloadSchema {
         if (f.type === 'object' && f.properties) {
             // recursively delete all the children
             for (const key in f.properties) {
-                if (!f.properties.hasOwnProperty(key)) {
+                if (!Object.prototype.hasOwnProperty.call(f.properties, key)) {
                     continue
                 }
                 this.remove(f.properties[key])
