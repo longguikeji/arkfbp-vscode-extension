@@ -12,7 +12,7 @@ import { showCreateFlowNodeBox } from './createFlowNodeBox';
 
 import { COMMAND_REFRESH, FlowOutlineProvider, COMMAND_SELECTION, posToLine } from './flowOutline';
 
-import { isArkFBPApp, isArkFBPAppByDocument, getArkFBPFlowDirByDocument, getDatabases } from './arkfbp';
+import { isArkFBPApp, isArkFBPAppByDocument, getArkFBPFlowDirByDocument, getDatabases, updateFlowGraph } from './arkfbp';
 
 import {
 	window, ExtensionContext, Terminal,
@@ -197,6 +197,8 @@ export async function activate(context: ExtensionContext) {
 	});
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.createFlowNode', async () => {
+			await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup');
+
 			const editor = vscode.window.activeTextEditor;
 			if (editor === undefined) {
 				return;
@@ -236,14 +238,39 @@ export async function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.deleteFlowNode', async (item) => {
-			// @Todo: delete the file and update the graph file
-
 			const result = await vscode.window.showWarningMessage('确认删除该节点么? \n该操作不可逆', {
 				modal: true,
 			}, 'OK');
 
 			if (typeof result !== 'undefined') {
-				// try to delete the node file
+				const editor = vscode.window.activeTextEditor;
+				if (!editor) {
+					return;
+				}
+
+				const flowDir = getArkFBPFlowDirByDocument(editor.document);
+				const graphFilePath = path.join(flowDir, 'index.js');
+				const files = arkfbp.findNodeFilesByClass(flowDir, item.cls);
+
+				if (files.length === 0) {
+					vscode.window.showErrorMessage('找不到对应的节点定义文件');
+					return;
+				}
+
+				if (files.length > 1) {
+					vscode.window.showWarningMessage('多于一个的定义文件，默认显示第一个匹配的文件');
+				}
+
+				updateFlowGraph('removeNode', graphFilePath, { cls: item.cls, id: item.id });
+				const previewWebview = previewWebviewList.find((item: PreviewWebview) => item.graphFilePath === graphFilePath);
+
+				if(previewWebview) {
+					previewWebview.show(graphFilePath);
+				}
+
+				rimraf.sync(files[0]);
+				flowOutlineDataProvider.refresh();
+
 				if (typeof item.id !== 'undefined') {
 					vscode.window.showInformationMessage(`The flow node ${item.cls} with id: ${item.id} deleted`);
 				} else {
@@ -255,6 +282,8 @@ export async function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arkfbp.explorer.flowOutline.action.open', async (item) => {
+			await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
+			await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup');
 
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) {
@@ -270,9 +299,6 @@ export async function activate(context: ExtensionContext) {
 			if (files.length > 1) {
 				vscode.window.showWarningMessage('多于一个的定义文件，默认显示第一个匹配的文件');
 			}
-
-			await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
-			await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup');
 
 			await vscode.workspace.openTextDocument(files[0]).then(doc => {
 				vscode.window.showTextDocument(doc);

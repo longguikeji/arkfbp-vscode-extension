@@ -23,10 +23,10 @@ export class Node extends fabric.Group {
 
     private _id: string
 
-    private _input: fabric.Object | null
-    private _output: fabric.Object | null
+    private _input: any
+    private _output: any
 
-    constructor(objects?: fabric.Object[], options?: fabric.IGroupOptions) {
+    constructor(objects?: any, options?: any) {
         super(objects, options || {})
 
         this.inputs = []
@@ -49,7 +49,7 @@ export class Node extends fabric.Group {
         return this._input!
     }
 
-    set input(value: fabric.Object) {
+    set input(value: any) {
         this._input = value
     }
 
@@ -57,13 +57,13 @@ export class Node extends fabric.Group {
         return this._output!
     }
 
-    set output(value: fabric.Object) {
+    set output(value: any) {
         this._output = value
     }
 
 }
 
-function makeInput(left: number, top: number, fill?: string): fabric.Object {
+function makeInput(left: number, top: number, fill?: string) {
     const input = new fabric.Path('M6,68 C2.6862915,68 4.05812251e-16,65.3137085 0,62 C-4.05812251e-16,58.6862915 2.6862915,56 6,56 L14,56 C16.209139,56 18,54.209139 18,52 L18,56 L18,68 L18,72 C18,69.8578046 16.3160315,68.1089211 14.1996403,68.0048953 L14,68 L6,68 Z', {
         left: 0,
         top: 0,
@@ -89,7 +89,7 @@ function makeInput(left: number, top: number, fill?: string): fabric.Object {
     return group
 }
 
-function makeOutput(left: number, top: number, fill?: string): fabric.Object {
+function makeOutput(left: number, top: number, fill?: string) {
     const output = new fabric.Path('M133,53 L133,49 C133,51.209139 134.790861,53 137,53 L137,53 L145,53 C148.313708,53 151,55.6862915 151,59 C151,62.3137085 148.313708,65 145,65 L145,65 L137,65 L136.80036,65.0048953 C134.683968,65.1089211 133,66.8578046 133,69 L133,69 L133,65 L133,53 Z', {
         left: 0,
         top: 0,
@@ -214,8 +214,8 @@ function makeNode(id: string, options: {
     const group = [
         rect, text, idText, circle, triangle, text2, text3, text4,
     ]
-    let input: fabric.Object | null = null
-    let output: fabric.Object | null = null
+    let input: any = null
+    let output: any = null
 
     if (options && options.hasInputs) {
         input = makeInput(-18, 45, options.inputsFill)

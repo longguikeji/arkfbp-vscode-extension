@@ -76,7 +76,7 @@ export class Outputs {
         if (f.dataType === 'object' && f.children) {
             // recursively delete all the children
             for (const key in f.children) {
-                if (!f.children.hasOwnProperty(key)) {
+                if (!Object.prototype.hasOwnProperty.call(f.children, key)) {
                     continue
                 }
                 this.remove(f.children[key])
@@ -164,7 +164,7 @@ export class Outputs {
 
         if (f.dataType === 'object' && f.children) {
             for (const key in f.children) {
-                if (!f.children.hasOwnProperty(key)) {
+                if (!Object.prototype.hasOwnProperty.call(f.children, key)) {
                     continue
                 }
                 const field = f.children[key]

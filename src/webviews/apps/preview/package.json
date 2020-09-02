@@ -1,5 +1,5 @@
 {
-  "name": "hello-world",
+  "name": "webview",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "@babel/core": "^7.9.0",
-    "ant-design-vue": "^1.4.1",
     "babel-generator": "^6.26.1",
     "babel-template": "^6.26.0",
     "core-js": "^3.6.4",
+    "uuid": "^7.0.3",
     "dedent": "^0.7.0",
     "fabric": "^4.0.0-beta.7",
     "jsonschema": "^1.2.6",
@@ -41,11 +41,11 @@
     "@vue/cli-plugin-vuex": "~4.2.0",
     "@vue/cli-service": "~4.2.0",
     "@vue/eslint-config-typescript": "^5.0.1",
-    "eslint": "^6.7.2",
-    "eslint-plugin-vue": "^6.1.2",
+    "eslint": "^7.3.0",
+    "eslint-plugin-vue": "^7.0.0-beta.3",
     "less": "^3.0.4",
     "less-loader": "^5.0.0",
-    "typescript": "~3.7.5",
+    "typescript": "^3.7.5",
     "vue-template-compiler": "^2.6.11"
   }
 }

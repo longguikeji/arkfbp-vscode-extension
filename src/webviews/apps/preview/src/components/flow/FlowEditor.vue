@@ -37,13 +37,13 @@ export default class FlowEditor extends Vue {
   }
 
   @Emit("createEdge")
-  createEdge(payload: { from: Node; to: Node }) {
+  createEdge(payload: { flow: Flow, from: Node; to: Node }) {
     return payload;
   }
 
   @Emit("removeSelected")
   removeSelected() {
-    return {flow: this.flow, selected: this.selected};
+    return { flow: this.flow, selected: this.selected };
   }
 
   @Watch("flow")
@@ -87,7 +87,9 @@ export default class FlowEditor extends Vue {
         }
       },
       onEdgeSelected: (from: Node, to: Node) => {
-        this.selected = [from.id, to.id];
+        if(from != null && to != null) {
+          this.selected = [from.id, to.id];
+        }
       },
       onNodeMoving: (id: string, x: number, y: number) => {
         const node = this.flow.getNodeById(id);
@@ -97,7 +99,7 @@ export default class FlowEditor extends Vue {
         const from = this.flow.getNodeById(fromId);
         const to = this.flow.getNodeById(toId);
         if (from != null && to != null) {
-            this.createEdge({ from, to });
+            this.createEdge({flow: this.flow, from, to });
         }
       }
     });
