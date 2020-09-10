@@ -103,7 +103,6 @@ export class PreviewWebview extends WebviewBase {
 				if (graphNode.name === node.cls) {
 					node.name = graphNode.name;
 					node.base = graphNode.base;
-					graphNodes.splice(i, 1);
 					break;
 				} else {
 					node.base = node.cls;

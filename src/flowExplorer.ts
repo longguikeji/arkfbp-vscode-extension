@@ -39,7 +39,7 @@ export class FlowsProvider
   }
 
   async create(p?: string) {
-    let flowReference = '';
+    let flowReference: string = '';
     if (typeof p !== 'undefined') {
       if (path.isAbsolute(p)) {
         // extract last flow part
@@ -52,7 +52,12 @@ export class FlowsProvider
       flowReference = flowReference.replace('/', '.');
     }
 
-    const result = await showCreateFlowBox(flowReference);
+    if(flowReference !== '') {
+      const result = await showCreateFlowBox(flowReference);
+    } else {
+      const result = await showCreateFlowBox();
+    }
+    
     this.refresh();
   }
 
