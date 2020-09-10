@@ -466,6 +466,15 @@ export function findNodeFilesByClass(flowDirPath: string, classID: string): stri
     return matchedFiles;
 }
 
+export function createFlow(options: { flow: string }): boolean {
+    const cwd = vscode.workspace.workspaceFolders![0].uri.path;
+    let stdout = cp.execFileSync('arkfbp', ['createflow', `${options.flow}`], {
+        cwd: cwd,
+    });
+
+    return true;
+}
+
 export function createNode(options: { flow: string, base: string, class: string, id: string }): boolean {
     const cwd = vscode.workspace.workspaceFolders![0].uri.path;
     let stdout = cp.execFileSync('arkfbp', ['createnode', '--flow', `${options.flow}`, '--base', `${options.base}`, '--class', `${options.class}`, '--id', `${options.id}`], {
@@ -597,6 +606,10 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
 export async function openNodeFileFromGraph(graphFilePath: string, node: {cls: string}) {
     const flowDir = path.dirname(graphFilePath);
     const files = findNodeFilesByClass(flowDir, node.cls);
+
+    if(files.length === 0) {
+        return;
+    }
 
     await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
     await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup');

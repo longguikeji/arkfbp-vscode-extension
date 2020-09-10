@@ -29,6 +29,8 @@ import { registerStatusBarItem } from './statusBar';
 import * as arkfbp from './arkfbp';
 import { DatabaseProvider} from './databaseExplorer';
 
+export const previewWebviewList: PreviewWebview[] = [];
+
 export function deactivate() {
 	if (terminal) {
 		terminal.dispose();
@@ -121,7 +123,6 @@ export async function activate(context: ExtensionContext) {
 		rootPath,
 		terminal
 	);
-	const previewWebviewList: PreviewWebview[] = [];
 
 	vscode.window.registerTreeDataProvider("arkfbp.explorer.flow", flowProvider);
 	context.subscriptions.push(

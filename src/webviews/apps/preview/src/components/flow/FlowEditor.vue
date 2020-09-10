@@ -130,7 +130,9 @@ export default class FlowEditor extends Vue {
     walkTree(tree!);
 
     edges.forEach(([from, to]: Edge) => {
-      editor.connect(mapping.get(from), mapping.get(to));
+      if(mapping.get(from) && mapping.get(to)) {
+        editor.connect(mapping.get(from), mapping.get(to));
+      }
     });
 
   }

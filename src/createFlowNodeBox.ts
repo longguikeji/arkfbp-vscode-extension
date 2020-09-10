@@ -2,6 +2,8 @@ import { window } from 'vscode';
 import * as vscode from 'vscode';
 import * as arkfbp from './arkfbp';
 import { idText } from 'typescript';
+import { previewWebviewList } from './extension'
+import { PreviewWebview } from './webviews/previewWebview';
 
 export async function showCreateFlowNodeBox(flowReference?: string, node?: {type: string}) {
 	const flowName = node ? flowReference : await window.showInputBox({
@@ -71,6 +73,12 @@ export async function showCreateFlowNodeBox(flowReference?: string, node?: {type
 		x: 30,
 		y: 30,
 	});
+
+	const previewWebview = previewWebviewList.find((item: PreviewWebview) => item.graphFilePath === graphFilePath);
+
+	if(previewWebview) {
+		previewWebview.resetPanel();
+	}
 
 	window.showInformationMessage(`新节点${className}创建成功`);
 }
