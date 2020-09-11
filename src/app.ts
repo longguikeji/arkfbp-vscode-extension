@@ -18,10 +18,6 @@ import {
 
   import * as arkfbp from './arkfbp';
 
-  function getPackageJson(root: string): string {
-    return path.join(root, ".arkfbp", "config.yml");
-  }
-
   export class AppProvider
     implements TreeDataProvider<FlowTreeItem | FlowDirTreeItem> {
     private readonly _onDidChangeTreeData: ScriptEventEmitter = new EventEmitter();
@@ -100,7 +96,7 @@ import {
       packageJsonPath?: string
     ): void {
       if (!packageJsonPath) {
-        packageJsonPath = getPackageJson(this.workspaceRoot);
+        packageJsonPath = arkfbp.getPackageJson(this.workspaceRoot);
       }
 
       if (this.pathExists(packageJsonPath)) {
@@ -118,7 +114,7 @@ import {
       const treeItems: FlowDirTreeItem[] = [];
       folders.forEach((folder: WorkspaceFolder): void => {
         const workspaceRoot: string = folder.uri.fsPath;
-        const packageJsonPath: string = getPackageJson(workspaceRoot);
+        const packageJsonPath: string = arkfbp.getPackageJson(workspaceRoot);
         const name = folder.name;
         if (this.pathExists(packageJsonPath)) {
           treeItems.push(

@@ -2,7 +2,7 @@ import { window } from 'vscode';
 import * as vscode from 'vscode';
 import * as arkfbp from './arkfbp';
 import { idText } from 'typescript';
-import { previewWebviewList } from './extension'
+import { previewWebviewList } from './extension';
 import { PreviewWebview } from './webviews/previewWebview';
 
 export async function showCreateFlowNodeBox(flowReference?: string, node?: {type: string}) {

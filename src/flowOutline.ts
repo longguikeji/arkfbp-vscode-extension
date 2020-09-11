@@ -3,6 +3,7 @@ import * as ts from 'typescript';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getArkFBPFlowDirByDocument } from './arkfbp';
+import { entryFile } from './extension';
 
 export const COMMAND_SELECTION = 'arkfbp.explorer.flowOutline.action.selection';
 export const COMMAND_REFRESH = 'arkfbp.explorer.flowOutline.action.refresh';
@@ -43,9 +44,9 @@ export class AstModel {
     if (editor !== undefined) {
       const flowDirPath = getArkFBPFlowDirByDocument(editor.document);
       if (flowDirPath !== '') {
-        const content = fs.readFileSync(path.join(flowDirPath, 'index.js')).toString();
+        const content = fs.readFileSync(path.join(flowDirPath, entryFile)).toString();
         this.sfile = ts.createSourceFile(
-          path.join(flowDirPath, 'index.js'),
+          path.join(flowDirPath, entryFile),
           content,
           ts.ScriptTarget.Latest
         );
