@@ -98,11 +98,16 @@ export class PreviewWebview extends WebviewBase {
 
 		// Merge graphNodes & graphIndexNodes
 		graphIndexNodes.forEach((node: GraphNode) => {
+			if(graphNodes.length === 0) {
+				node.base = node.cls;
+				node.name = node.cls;
+			}
 			for (var i = 0; i < graphNodes.length; ++i) {
 				const graphNode = graphNodes[i];
 				if (graphNode.name === node.cls) {
 					node.name = graphNode.name;
 					node.base = graphNode.base;
+					graphNodes.splice(i, 1);
 					break;
 				} else {
 					node.base = node.cls;
