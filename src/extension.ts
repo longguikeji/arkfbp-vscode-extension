@@ -29,6 +29,15 @@ import { registerStatusBarItem } from './statusBar';
 import * as arkfbp from './arkfbp';
 import { DatabaseProvider} from './databaseExplorer';
 
+const entryFileType: any = {
+	javascript: 'index.js',
+	typescript: 'index.ts',
+	python: 'main.py',
+};
+const packageJsonPath: string = arkfbp.getPackageJson(vscode.workspace.rootPath || '.');
+const doc = yaml.safeLoad(fs.readFileSync(packageJsonPath, "utf-8").toString());
+
+export const entryFile: string = entryFileType[doc.language];
 export const previewWebviewList: PreviewWebview[] = [];
 
 export function deactivate() {
@@ -87,7 +96,7 @@ export async function activate(context: ExtensionContext) {
 		})
 	);
 
-	/////
+
 	const dependencyProvider: DependencyProvider = new DependencyProvider(
 		context,
 		rootPath
@@ -98,12 +107,7 @@ export async function activate(context: ExtensionContext) {
 			vscode.env.openExternal(vscode.Uri.parse(`https://npmjs.com/package/${item.label}`));
 		})
 	);
-	//////
 
-
-	/**
-	 * DatabaseProvider
-	 */
 
 	const databaseProvider: DatabaseProvider = new DatabaseProvider(
 		context,
@@ -250,7 +254,7 @@ export async function activate(context: ExtensionContext) {
 				}
 
 				const flowDir = getArkFBPFlowDirByDocument(editor.document);
-				const graphFilePath = path.join(flowDir, 'index.js');
+				const graphFilePath = path.join(flowDir, entryFile);
 				const files = arkfbp.findNodeFilesByClass(flowDir, item.cls);
 
 				if (files.length === 0) {

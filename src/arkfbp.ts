@@ -10,6 +10,7 @@ import * as ts from 'typescript';
 
 import { runCommandInIntegratedTerminal } from './util';
 import { Database, Table } from './models/database';
+import { entryFile } from './extension';
 import {
     parse,
     stringify,
@@ -20,6 +21,10 @@ const ARKFBP_META_DIR = '.arkfbp';
 const ARKFBP_META_CONFIG_FILE = 'config.yaml';
 const ARKFBP_FLOW_DIR = 'flows';
 const ARKFBP_DATBASE_DIR = 'databases';
+
+export function getPackageJson(root: string): string {
+    return path.join(root, ".arkfbp", "config.yml");
+}
 
 export function isArkFBPApp(root: string): boolean {
     try {
@@ -150,7 +155,7 @@ export function getDatabases(): Database[] {
 
 export function isArkFBPFlow(root: string): boolean {
     try {
-        let stat = fs.statSync(path.join(root, 'index.js'));
+        let stat = fs.statSync(path.join(root, entryFile));
         if (!stat.isFile()) {
             return false;
         }
@@ -388,7 +393,7 @@ export function getFlowPath(flow: string): string {
 export function getGraphFilePath(flow: string): string {
     const flowPath = getFlowPath(flow);
     const flowRootDirPath = getArkFBPFlowRootDir(getArkFBPAppDir());
-    return path.join(flowRootDirPath, flowPath, 'index.js');
+    return path.join(flowRootDirPath, flowPath, entryFile);
 }
 
 export function getFlowReference(graphFilePath: string): string {
@@ -442,7 +447,7 @@ export function getFlowDirPathByReference(workspaceRoot: string, reference: stri
 }
 
 export function getFlowGraphDefinitionFileByReference(workspaceRoot: string, reference: string): string {
-    const p = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference, 'index.js');
+    const p = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference, entryFile);
     return p;
 }
 
@@ -468,7 +473,7 @@ export function findNodeFilesByClass(flowDirPath: string, classID: string): stri
 
 export function createFlow(options: { flow: string }): boolean {
     const cwd = vscode.workspace.workspaceFolders![0].uri.path;
-    let stdout = cp.execFileSync('arkfbp', ['createflow', `${options.flow}`], {
+    cp.execFileSync('arkfbp', ['createflow', `${options.flow}`], {
         cwd: cwd,
     });
 
@@ -477,7 +482,7 @@ export function createFlow(options: { flow: string }): boolean {
 
 export function createNode(options: { flow: string, base: string, class: string, id: string }): boolean {
     const cwd = vscode.workspace.workspaceFolders![0].uri.path;
-    let stdout = cp.execFileSync('arkfbp', ['createnode', '--flow', `${options.flow}`, '--base', `${options.base}`, '--class', `${options.class}`, '--id', `${options.id}`], {
+    cp.execFileSync('arkfbp', ['createnode', '--flow', `${options.flow}`, '--base', `${options.base}`, '--class', `${options.class}`, '--id', `${options.id}`], {
         cwd: cwd,
     });
 
