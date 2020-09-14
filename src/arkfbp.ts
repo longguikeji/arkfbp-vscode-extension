@@ -536,8 +536,7 @@ export function getFlowDirPathByReference(workspaceRoot: string, reference: stri
         rootDir = 'app';
     }
 
-    const p = path.join(workspaceRoot, rootDir, ARKFBP_FLOW_DIR, reference);
-    return p;
+    return path.join(workspaceRoot, rootDir, ARKFBP_FLOW_DIR, reference);
 }
 
 export function getFlowGraphDefinitionFileByReference(workspaceRoot: string, reference: string): string {
@@ -551,8 +550,7 @@ export function getFlowGraphDefinitionFileByReference(workspaceRoot: string, ref
         rootDir = 'app';
     }
 
-    const p = path.join(workspaceRoot, rootDir, ARKFBP_FLOW_DIR, reference, getMainFileName());
-    return p;
+    return path.join(workspaceRoot, rootDir, ARKFBP_FLOW_DIR, reference, getMainFileName());
 }
 
 export function getFlowReferenceByAbsoluteFlowDirPath(p: string): string{

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as ts from 'typescript';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getArkFBPFlowDirByDocument, getMainFileName } from './arkfbp';
+import { getArkFBPFlowDirByDocument, getMainFileName, getLanguageType } from './arkfbp';
 
 export const COMMAND_SELECTION = 'arkfbp.explorer.flowOutline.action.selection';
 export const COMMAND_REFRESH = 'arkfbp.explorer.flowOutline.action.refresh';
@@ -66,14 +66,7 @@ export class AstModel {
         node: node,
         isDirectory: getNodes(node).length > 0,
       };
-    }).filter((node: AstNode) => {
-      if (node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration') {
-        return true;
-      }
-
-      return false;
     });
-
     return nodes;
   }
 
@@ -94,46 +87,92 @@ export class AstModel {
     });
   }
 
-  public getChildren(parent: AstNode): AstNode[] {
-    let methods = this.getXChildren(parent);
-    methods = methods.filter((node: AstNode) => {
-      if (node.kind && syntaxKindToName(node.kind) !== 'MethodDeclaration') {
-        return false;
+  public getChildren(parent: AstNode[] | AstNode): AstNode[] {
+    const languageType = getLanguageType();
+    let flowNodes: AstNode[] = [];
+
+    if(languageType === ('javascript' || 'typescript')) {
+      // Flow Class Definition
+      let node: AstNode = {};
+      if(Array.isArray(parent)) {
+        node = parent.find((node: AstNode) => node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration') || {};
+      } else {
+        node = parent;
       }
 
-      if (node.node && node.node.name && node.node.name.escapedText !== 'createNodes') {
-        return false;
+      let methods = this.getXChildren(node);
+      methods = methods.filter((node: AstNode) => {
+        if (node.kind && syntaxKindToName(node.kind) !== 'MethodDeclaration') {
+          return false;
+        }
+
+        if (node.node && node.node.name && node.node.name.escapedText !== 'createNodes') {
+          return false;
+        }
+
+        return true;
+      });
+
+      if (methods.length === 0) {
+        return [];
       }
 
-      return true;
-    });
+      const createNodesFunc = methods[0];
+      const ret = this.getXChildren(createNodesFunc);
 
-    if (methods.length === 0) {
-      return [];
+      const returnStatement = ret[1].node.statements[0];
+      const elements = returnStatement.expression.elements;
+      flowNodes = elements.map((element: any) => {
+        const p: AstNode = {
+          pos: element.pos,
+          end: element.end,
+        };
+        for (let i = 0; i < element.properties.length; ++i) {
+          const prop = element.properties[i];
+          if (prop.name.escapedText === 'cls') {
+            p['cls'] = prop.initializer.escapedText;
+          }
+          if (prop.name.escapedText === 'id') {
+            p['id'] = prop.initializer.text;
+          }
+        }
+        return p;
+      }) || [];
     }
 
-    const createNodesFunc = methods[0];
-    const ret = this.getXChildren(createNodesFunc);
-
-    const returnStatement = ret[1].node.statements[0];
-    const elements = returnStatement.expression.elements;
-    const flowNodes = elements.map((element: any) => {
-      const p: AstNode = {
-        pos: element.pos,
-        end: element.end,
-      };
-      for (let i = 0; i < element.properties.length; ++i) {
-        const prop = element.properties[i];
-        if (prop.name.escapedText === 'cls') {
-          p['cls'] = prop.initializer.escapedText;
-        }
-        if (prop.name.escapedText === 'id') {
-          p['id'] = prop.initializer.text;
-        }
+    if(languageType === 'python') {
+      if(!Array.isArray(parent)) {
+        return []
       }
-      return p;
-    });
 
+      const returnStatement = parent.find((node: AstNode) => node.kind && syntaxKindToName(node.kind) === 'ReturnStatement');
+        if (!returnStatement) {
+            return [];
+        }
+        const elements = returnStatement.node.expression.elements;
+        flowNodes = elements.map((element: any) => {
+            const p: AstNode = {
+                pos: element.pos,
+                end: element.end,
+            };
+    
+            for (let i = 0; i < element.properties.length; ++i) {
+                const prop = element.properties[i];
+                if (prop.name.text === 'cls') {
+                    p['cls'] = prop.initializer.escapedText;
+                }
+                if (prop.name.text === 'id') {
+                    p['id'] = prop.initializer.text;
+                }
+            }
+    
+            return p;
+        }) || [];
+    }
+      
+    
+    console.info(parent, 'parent');
+    
     return flowNodes;
   }
 }
@@ -195,7 +234,7 @@ export class FlowOutlineProvider implements vscode.TreeDataProvider<AstNode> {
       return this.model.getChildren(element);
     } else {
       if (this.model.roots.length) {
-        return this.model.getChildren(this.model.roots[0]);
+        return this.model.getChildren(this.model.roots);
       } else {
         return [];
       }
