@@ -300,7 +300,8 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
             isDirectory: getNodes(node).length > 0,
         };
     });
-    const languageType = getLanguageType()
+    const languageType = getLanguageType();
+    let flowNodes: GraphNode[] = []
 
     if(languageType === ('javascript' || 'typescript')) {
         // Flow Class Definition
@@ -333,7 +334,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
         const returnStatement = ret[1].node.statements[0];
         const elements = returnStatement.expression.elements;
 
-        const flowNodes = elements.map((element: any) => {
+        flowNodes = elements.map((element: any) => {
             const p: GraphNode = {
                 pos: element.pos,
                 end: element.end,
@@ -362,8 +363,6 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
     
             return p;
         });
-
-        return flowNodes;
     }
 
     if(languageType === 'python') {
@@ -374,7 +373,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
 
         const elements = returnStatement.node.expression.elements;
 
-        const flowNodes = elements.map((element: any) => {
+        flowNodes = elements.map((element: any) => {
             const p: GraphNode = {
                 pos: element.pos,
                 end: element.end,
@@ -403,9 +402,9 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
     
             return p;
         });
-
-        return flowNodes;
     }
+
+    return flowNodes;
 }
 
 export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode | null {
@@ -568,7 +567,7 @@ export function findNodeFilesByClass(flowDirPath: string, classID: string): stri
     const matchedFiles: string[] = [];
     const languageType = getLanguageType();
 
-    let nodeFileName: string = ''
+    let nodeFileName: string = '';
     switch (languageType) {
         case 'javascript':
             nodeFileName = classID + '.js';

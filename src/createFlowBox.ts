@@ -52,7 +52,7 @@ export async function showCreateFlowBox(root?: string) {
 			return;
 		}
 	
-		const flowPath = arkfbp.getArkFBPFlowRootDir()
+		const flowPath = arkfbp.getArkFBPFlowRootDir();
 	
 		r = arkfbp.createPythonFlow({
 			filename: flow,
