@@ -28,12 +28,42 @@ export async function showCreateFlowBox(root?: string) {
 		flow = root + '.' + flow;
 	}
 
-	const r = arkfbp.createFlow({
-		flow: flow,
-	});
-	if (!r) {
-		window.showErrorMessage(`工作流${flowName}创建失败`);
+	const languageType = arkfbp.getLanguageType();
+	let r: boolean = false;
+
+	if(languageType === ('javascript' || 'typescript')) {
+		r = arkfbp.createJavaScriptFlow({
+			flow: flow,
+		});
 	}
 
-	window.showInformationMessage(`工作流${flowName}创建成功`);
+	if(languageType === 'python') {
+		const baseFlow = await window.showQuickPick(
+			[
+				'Base',
+				'View',
+				'Hook',
+			],
+		{
+			placeHolder: '选择基础节点',
+		});
+	
+		if (typeof baseFlow === 'undefined') {
+			return;
+		}
+	
+		const flowPath = arkfbp.getArkFBPFlowRootDir()
+	
+		r = arkfbp.createPythonFlow({
+			filename: flow,
+			baseFlow: baseFlow.toLowerCase(),
+			flowPath: flowPath,
+		});
+	}
+
+	if (!r) {
+		window.showErrorMessage(`工作流${flowName}创建失败`);
+	} else {
+		window.showInformationMessage(`工作流${flowName}创建成功`);
+	}
 }

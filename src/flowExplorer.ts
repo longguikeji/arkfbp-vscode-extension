@@ -53,9 +53,9 @@ export class FlowsProvider
     }
 
     if(flowReference !== '') {
-      const result = await showCreateFlowBox(flowReference);
+      await showCreateFlowBox(flowReference);
     } else {
-      const result = await showCreateFlowBox();
+      await showCreateFlowBox();
     }
     
     this.refresh();
@@ -124,7 +124,6 @@ export class FlowsProvider
     element?: FlowTreeItem | FlowDirTreeItem
   ): Thenable<(FlowTreeItem | FlowDirTreeItem)[]> {
     return new Promise((resolve: Function) => {
-      const folders: any = workspace.workspaceFolders;
       if (element) {
         const root = getArkFBPAppDir();
 

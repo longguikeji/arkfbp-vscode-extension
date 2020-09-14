@@ -29,15 +29,6 @@ import { registerStatusBarItem } from './statusBar';
 import * as arkfbp from './arkfbp';
 import { DatabaseProvider} from './databaseExplorer';
 
-const entryFileType: any = {
-	javascript: 'index.js',
-	typescript: 'index.ts',
-	python: 'main.py',
-};
-const packageJsonPath: string = arkfbp.getPackageJson(vscode.workspace.rootPath || '.');
-const doc = yaml.safeLoad(fs.readFileSync(packageJsonPath, "utf-8").toString());
-
-export const entryFile: string = entryFileType[doc.language];
 export const previewWebviewList: PreviewWebview[] = [];
 
 export function deactivate() {
@@ -97,29 +88,33 @@ export async function activate(context: ExtensionContext) {
 	);
 
 
-	const dependencyProvider: DependencyProvider = new DependencyProvider(
-		context,
-		rootPath
-	);
-	vscode.window.registerTreeDataProvider("arkfbp.explorer.dependency", dependencyProvider);
-	context.subscriptions.push(
-		vscode.commands.registerCommand('arkfbp.explorer.dependency.action.openDocumentPage', async (item: any) => {
-			vscode.env.openExternal(vscode.Uri.parse(`https://npmjs.com/package/${item.label}`));
-		})
-	);
+	if(arkfbp.getLanguageType() !== 'python') {
+		const dependencyProvider: DependencyProvider = new DependencyProvider(
+			context,
+			rootPath
+		);
+		vscode.window.registerTreeDataProvider("arkfbp.explorer.dependency", dependencyProvider);
+		context.subscriptions.push(
+			vscode.commands.registerCommand('arkfbp.explorer.dependency.action.openDocumentPage', async (item: any) => {
+				vscode.env.openExternal(vscode.Uri.parse(`https://npmjs.com/package/${item.label}`));
+			})
+		);
+	}
 
 
-	const databaseProvider: DatabaseProvider = new DatabaseProvider(
-		context,
-		rootPath
-	);
-	vscode.window.registerTreeDataProvider("arkfbp.explorer.database", databaseProvider);
-	context.subscriptions.push(
-		vscode.commands.registerCommand("arkfbp.explorer.database.action.create", () => databaseProvider.create())
-	);
-	context.subscriptions.push(
-		vscode.commands.registerCommand("arkfbp.explorer.database.action.refresh", () => databaseProvider.refresh())
-	);
+	if(arkfbp.getLanguageType() !== 'python') {
+		const databaseProvider: DatabaseProvider = new DatabaseProvider(
+			context,
+			rootPath
+		);
+		vscode.window.registerTreeDataProvider("arkfbp.explorer.database", databaseProvider);
+		context.subscriptions.push(
+			vscode.commands.registerCommand("arkfbp.explorer.database.action.create", () => databaseProvider.create())
+		);
+		context.subscriptions.push(
+			vscode.commands.registerCommand("arkfbp.explorer.database.action.refresh", () => databaseProvider.refresh())
+		);
+	}
 
 
 	const flowProvider: FlowsProvider = new FlowsProvider(
@@ -254,7 +249,7 @@ export async function activate(context: ExtensionContext) {
 				}
 
 				const flowDir = getArkFBPFlowDirByDocument(editor.document);
-				const graphFilePath = path.join(flowDir, entryFile);
+				const graphFilePath = path.join(flowDir, arkfbp.getMainFileName());
 				const files = arkfbp.findNodeFilesByClass(flowDir, item.cls);
 
 				if (files.length === 0) {

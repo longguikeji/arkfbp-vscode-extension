@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import * as yaml from 'js-yaml';
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as babel from '@babel/core';
@@ -10,7 +11,6 @@ import * as ts from 'typescript';
 
 import { runCommandInIntegratedTerminal } from './util';
 import { Database, Table } from './models/database';
-import { entryFile } from './extension';
 import {
     parse,
     stringify,
@@ -18,17 +18,34 @@ import {
   } from 'comment-json';
 
 const ARKFBP_META_DIR = '.arkfbp';
-const ARKFBP_META_CONFIG_FILE = 'config.yaml';
+const ARKFBP_META_CONFIG_FILE = 'config.yml';
 const ARKFBP_FLOW_DIR = 'flows';
 const ARKFBP_DATBASE_DIR = 'databases';
 
 export function getPackageJson(root: string): string {
-    return path.join(root, ".arkfbp", "config.yml");
+    return path.join(root, ARKFBP_META_DIR, ARKFBP_META_CONFIG_FILE);
+}
+
+export function getLanguageType(): string {
+    const packageJsonPath: string = getPackageJson(vscode.workspace.rootPath || '.');
+    const doc = yaml.safeLoad(fs.readFileSync(packageJsonPath, "utf-8").toString());
+    
+    return doc.language;
+}
+
+export function getMainFileName(): string {
+    const entryFileType: any = {
+        javascript: 'index.js',
+        typescript: 'index.ts',
+        python: 'main.py',
+    };
+    
+    return entryFileType[getLanguageType()];
 }
 
 export function isArkFBPApp(root: string): boolean {
     try {
-        const stat = fs.statSync(path.join(root, ARKFBP_META_DIR, ARKFBP_META_CONFIG_FILE));
+        const stat = fs.statSync(getPackageJson(root));
         return stat.isFile();
     } catch (error) {
         return false;
@@ -72,7 +89,17 @@ export function getArkFBPFlowRootDir(root?: string): string {
     if (typeof root === 'undefined') {
         root = getArkFBPAppDir();
     }
-    return path.join(root, "src", ARKFBP_FLOW_DIR);
+    const languageType = getLanguageType();
+    let rootDir: string = '';
+    if(languageType === ('javascript' || 'typescript')) {
+        rootDir = 'src';
+    }
+
+    if(languageType === 'python') {
+        rootDir = 'app';
+    }
+
+    return path.join(root, rootDir, ARKFBP_FLOW_DIR);
 }
 
 export function getArkFBPFlows(dir: string, includeGroup: boolean = false): (string | [string, boolean])[] {
@@ -83,7 +110,7 @@ export function getArkFBPFlows(dir: string, includeGroup: boolean = false): (str
         if (isArkFBPFlow(path.join(dir, element))) {
             flows.push(element);
         } else {
-            if (includeGroup) {
+            if (includeGroup && fs.statSync(path.join(dir, element)).isDirectory()) {
                 // flow group
                 flows.push([element, true]);
             }
@@ -155,7 +182,7 @@ export function getDatabases(): Database[] {
 
 export function isArkFBPFlow(root: string): boolean {
     try {
-        let stat = fs.statSync(path.join(root, entryFile));
+        let stat = fs.statSync(path.join(root, getMainFileName()));
         if (!stat.isFile()) {
             return false;
         }
@@ -272,74 +299,113 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
             node: node,
             isDirectory: getNodes(node).length > 0,
         };
-    }).filter((node: GraphNode) => {
-        if (node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration') {
+    });
+    const languageType = getLanguageType()
+
+    if(languageType === ('javascript' || 'typescript')) {
+        // Flow Class Definition
+        const cls = nodes.find((node: GraphNode) => node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration');
+
+        if (!cls) {
+            return [];
+        }
+
+        let methods = getXChildren(sfile, cls).filter((node: GraphNode) => {
+            if (node.kind && syntaxKindToName(node.kind) !== 'MethodDeclaration') {
+                return false;
+            }
+
+            if (node.node && node.node.name && node.node.name.escapedText !== 'createNodes') {
+                return false;
+            }
+
             return true;
+        });
+
+        // Get `createNodes` Func
+        if (methods.length === 0) {
+            return [];
         }
 
-        return false;
-    });
+        const createNodesFunc = methods[0];
+        const ret = getXChildren(sfile, createNodesFunc);
 
-    if (nodes.length === 0) {
-        return [];
+        const returnStatement = ret[1].node.statements[0];
+        const elements = returnStatement.expression.elements;
+
+        const flowNodes = elements.map((element: any) => {
+            const p: GraphNode = {
+                pos: element.pos,
+                end: element.end,
+                x: 30,
+                y: 30,
+            };
+    
+            for (let i = 0; i < element.properties.length; ++i) {
+                const prop = element.properties[i];
+                if (prop.name.escapedText === 'cls') {
+                    p['cls'] = prop.initializer.escapedText;
+                }
+                if (prop.name.escapedText === 'id') {
+                    p['id'] = prop.initializer.text;
+                }
+                if (prop.name.escapedText === 'next') {
+                    p['next'] = prop.initializer.text;
+                }
+                if (prop.name.escapedText === 'x') {
+                    p['x'] = prop.initializer.text;
+                }
+                if (prop.name.escapedText === 'y') {
+                    p['y'] = prop.initializer.text;
+                }
+            }
+    
+            return p;
+        });
+
+        return flowNodes;
     }
 
-    // Flow Class Definition
-    const cls = nodes[0];
-
-    let methods = getXChildren(sfile, cls).filter((node: GraphNode) => {
-        if (node.kind && syntaxKindToName(node.kind) !== 'MethodDeclaration') {
-            return false;
+    if(languageType === 'python') {
+        const returnStatement = nodes.find((node: GraphNode) => node.kind && syntaxKindToName(node.kind) === 'ReturnStatement');
+        if (!returnStatement) {
+            return [];
         }
 
-        if (node.node && node.node.name && node.node.name.escapedText !== 'createNodes') {
-            return false;
-        }
+        const elements = returnStatement.node.expression.elements;
 
-        return true;
-    });
+        const flowNodes = elements.map((element: any) => {
+            const p: GraphNode = {
+                pos: element.pos,
+                end: element.end,
+                x: 30,
+                y: 30,
+            };
+    
+            for (let i = 0; i < element.properties.length; ++i) {
+                const prop = element.properties[i];
+                if (prop.name.text === 'cls') {
+                    p['cls'] = prop.initializer.escapedText;
+                }
+                if (prop.name.text === 'id') {
+                    p['id'] = prop.initializer.text;
+                }
+                if (prop.name.text === 'next') {
+                    p['next'] = prop.initializer.text;
+                }
+                if (prop.name.text === 'x') {
+                    p['x'] = prop.initializer.text;
+                }
+                if (prop.name.text === 'y') {
+                    p['y'] = prop.initializer.text;
+                }
+            }
+    
+            return p;
+        });
 
-    // Get `createNodes` Func
-    if (methods.length === 0) {
-        return [];
+        return flowNodes;
     }
-
-    const createNodesFunc = methods[0];
-    const ret = getXChildren(sfile, createNodesFunc);
-
-    const returnStatement = ret[1].node.statements[0];
-    const elements = returnStatement.expression.elements;
-    const flowNodes = elements.map((element: any) => {
-        const p: GraphNode = {
-            pos: element.pos,
-            end: element.end,
-            x: 30,
-            y: 30,
-        };
-
-        for (let i = 0; i < element.properties.length; ++i) {
-            const prop = element.properties[i];
-            if (prop.name.escapedText === 'cls') {
-                p['cls'] = prop.initializer.escapedText;
-            }
-            if (prop.name.escapedText === 'id') {
-                p['id'] = prop.initializer.text;
-            }
-            if (prop.name.escapedText === 'next') {
-                p['next'] = prop.initializer.text;
-            }
-            if (prop.name.escapedText === 'x') {
-                p['x'] = prop.initializer.text;
-            }
-            if (prop.name.escapedText === 'y') {
-                p['y'] = prop.initializer.text;
-            }
-        }
-
-        return p;
-    });
-
-    return flowNodes;
 }
 
 export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode | null {
@@ -365,25 +431,38 @@ export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode | null {
             name: '',
             base: '',
         };
-    }).filter((node: GraphNode) => {
-        if (node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration') {
-            return true;
-        }
-
-        return false;
     });
 
-    if (nodes.length === 0) {
-        return null;
+    const languageType = getLanguageType();
+    if(languageType === ('javascript' || 'typescript')) {
+        const node = nodes.find((node: GraphNode) => node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration');
+
+        if(!node) {
+            return null;
+        }
+
+        const nodeName = node.node.name.escapedText;
+        const baseNode = node.node.heritageClauses[0].types[0].expression.escapedText;
+        const p: GraphNode = {};
+        p.base = baseNode;
+        p.name = nodeName;
+        return p;
     }
 
-    const node = nodes[0];
-    const nodeName = node.node.name.escapedText;
-    const baseNode = node.node.heritageClauses[0].types[0].expression.escapedText;
-    const p: GraphNode = {};
-    p.base = baseNode;
-    p.name = nodeName;
-    return p;
+    if(languageType === 'python') {
+        const classNode = nodes.find((node: GraphNode) => node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration');
+        const baseNode = nodes.find((node: GraphNode) => node.node && node.node.expression && syntaxKindToName(node.node.expression.kind) === 'ParenthesizedExpression');
+        if(!classNode || !baseNode) {
+            return null;
+        }
+
+        const className = classNode.node.name.escapedText;
+        const baseName = baseNode.node.expression.expression.escapedText;
+        const p: GraphNode = {};
+        p.base = baseName;
+        p.name = className;
+        return p;
+    }
 }
 
 export function getFlowPath(flow: string): string {
@@ -393,7 +472,13 @@ export function getFlowPath(flow: string): string {
 export function getGraphFilePath(flow: string): string {
     const flowPath = getFlowPath(flow);
     const flowRootDirPath = getArkFBPFlowRootDir(getArkFBPAppDir());
-    return path.join(flowRootDirPath, flowPath, entryFile);
+    return path.join(flowRootDirPath, flowPath, getMainFileName());
+}
+
+export function getFlowNodesDirPath(flow: string): string {
+    const flowPath = getFlowPath(flow);
+    const flowRootDirPath = getArkFBPFlowRootDir(getArkFBPAppDir());
+    return path.join(flowRootDirPath, flowPath, 'nodes');
 }
 
 export function getFlowReference(graphFilePath: string): string {
@@ -406,8 +491,7 @@ export function getFlowReference(graphFilePath: string): string {
  * @param flowDirPath: flow directory path
  */
 export function getArkFBPFlowGraphNodes(flowDirPath: string): GraphNode[] {
-    const elements = fs.readdirSync(path.join(flowDirPath, 'nodes'));
-
+    const elements = fs.readdirSync(path.join(flowDirPath, 'nodes')).filter((item: string) => !item.includes('__init__'));
     const graphNodes: GraphNode[] = [];
 
     for (var i = 0; i < elements.length; ++i) {
@@ -442,12 +526,32 @@ export function runFlow(workspaceRoot: string, terminal: vscode.Terminal, flowNa
 }
 
 export function getFlowDirPathByReference(workspaceRoot: string, reference: string): string {
-    const p = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference);
+    const languageType = getLanguageType();
+    let rootDir: string = '';
+    if(languageType === ('javascript' || 'typescript')) {
+        rootDir = 'src';
+    }
+
+    if(languageType === 'python') {
+        rootDir = 'app';
+    }
+
+    const p = path.join(workspaceRoot, rootDir, ARKFBP_FLOW_DIR, reference);
     return p;
 }
 
 export function getFlowGraphDefinitionFileByReference(workspaceRoot: string, reference: string): string {
-    const p = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference, entryFile);
+    const languageType = getLanguageType();
+    let rootDir: string = '';
+    if(languageType === ('javascript' || 'typescript')) {
+        rootDir = 'src';
+    }
+
+    if(languageType === 'python') {
+        rootDir = 'app';
+    }
+
+    const p = path.join(workspaceRoot, rootDir, ARKFBP_FLOW_DIR, reference, getMainFileName());
     return p;
 }
 
@@ -462,8 +566,25 @@ export function findNodeFilesByClass(flowDirPath: string, classID: string): stri
     const nodesDirPath = path.join(flowDirPath, 'nodes');
     const elements = fs.readdirSync(nodesDirPath);
     const matchedFiles: string[] = [];
+    const languageType = getLanguageType();
+
+    let nodeFileName: string = ''
+    switch (languageType) {
+        case 'javascript':
+            nodeFileName = classID + '.js';
+            break;
+        case 'typescript':
+            nodeFileName = classID + '.ts';
+            break;
+        case 'python':
+            nodeFileName = classID + '.py';
+            break;
+        default:
+            break;
+    }
+
     elements.forEach((element) => {
-        if (element.toLocaleLowerCase() === (classID + '.js').toLocaleLowerCase()) {
+        if (element.toLocaleLowerCase() === nodeFileName.toLocaleLowerCase()) {
             matchedFiles.push(path.join(nodesDirPath, element));
         }
     });
@@ -471,7 +592,7 @@ export function findNodeFilesByClass(flowDirPath: string, classID: string): stri
     return matchedFiles;
 }
 
-export function createFlow(options: { flow: string }): boolean {
+export function createJavaScriptFlow(options: { flow: string }): boolean {
     const cwd = vscode.workspace.workspaceFolders![0].uri.path;
     cp.execFileSync('arkfbp', ['createflow', `${options.flow}`], {
         cwd: cwd,
@@ -480,11 +601,23 @@ export function createFlow(options: { flow: string }): boolean {
     return true;
 }
 
-export function createNode(options: { flow: string, base: string, class: string, id: string }): boolean {
+export function createPythonFlow(options: { flowPath: string, baseFlow: string, filename: string }): boolean {
+    cp.execFileSync('arkfbp-py', ['createflow', `${options.filename}`, '--topdir', `${options.flowPath}`, '--class', `${options.baseFlow}`]);
+
+    return true;
+}
+
+export function createJavascriptNode(options: { flow: string, base: string, class: string, id: string }): boolean {
     const cwd = vscode.workspace.workspaceFolders![0].uri.path;
     cp.execFileSync('arkfbp', ['createnode', '--flow', `${options.flow}`, '--base', `${options.base}`, '--class', `${options.class}`, '--id', `${options.id}`], {
         cwd: cwd,
     });
+
+    return true;
+}
+
+export function createPythonNode(options: { nodesPath: string, baseClass: string, id: string, filename: string }): boolean {
+    cp.execFileSync('arkfbp-py', ['createnode', `${options.filename}`, '--topdir', `${options.nodesPath}`, '--class', `${options.baseClass}`, '--id', `${options.id}`]);
 
     return true;
 }
@@ -626,7 +759,7 @@ export async function openNodeFileFromGraph(graphFilePath: string, node: {cls: s
 
 export function createDatabase(options: { name: string }): boolean {
     const cwd = vscode.workspace.workspaceFolders![0].uri.path;
-    let stdout = cp.execFileSync('arkfbp', ['db', 'create', '--name', `${options.name}`], {
+    cp.execFileSync('arkfbp', ['db', 'create', '--name', `${options.name}`], {
         cwd: cwd,
     });
 

@@ -53,13 +53,30 @@ export async function showCreateFlowNodeBox(flowReference?: string, node?: {type
 	}
 
 	const filename = className[0].toLowerCase() + className.slice(1);
+	const nodesPath = arkfbp.getFlowNodesDirPath(flowName);
+	const languageType = arkfbp.getLanguageType();
 
-	const r = arkfbp.createNode({
-		flow: flowName,
-		base: baseClassName,
-		class: className,
-		id: nodeID,
-	});
+	let r: boolean = false;
+
+	if(languageType === ('javascript' || 'typescript')) {
+		r = arkfbp.createJavascriptNode({
+			flow: flowName,
+			base: baseClassName,
+			class: className,
+			id: nodeID,
+		});
+	}
+
+	if(languageType === 'python') {
+		r = arkfbp.createPythonNode({
+			filename: filename,
+			baseClass: baseClassName.slice(0, -4).toLowerCase(),
+			nodesPath: nodesPath,
+			id: nodeID,
+		});
+	}
+
+	
 	if (!r) {
 		window.showErrorMessage(`新节点${className}创建失败`);
 	}
