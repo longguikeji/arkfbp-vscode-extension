@@ -301,7 +301,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
         };
     });
     const languageType = getLanguageType();
-    let flowNodes: GraphNode[] = []
+    let flowNodes = [];
 
     if(languageType === ('javascript' || 'typescript')) {
         // Flow Class Definition
@@ -362,7 +362,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
             }
     
             return p;
-        });
+        }) || [];
     }
 
     if(languageType === 'python') {
@@ -401,7 +401,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
             }
     
             return p;
-        });
+        }) || [];
     }
 
     return flowNodes;
@@ -432,6 +432,7 @@ export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode | null {
         };
     });
 
+    const p: GraphNode = {};
     const languageType = getLanguageType();
     if(languageType === ('javascript' || 'typescript')) {
         const node = nodes.find((node: GraphNode) => node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration');
@@ -442,10 +443,9 @@ export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode | null {
 
         const nodeName = node.node.name.escapedText;
         const baseNode = node.node.heritageClauses[0].types[0].expression.escapedText;
-        const p: GraphNode = {};
+        
         p.base = baseNode;
         p.name = nodeName;
-        return p;
     }
 
     if(languageType === 'python') {
@@ -457,11 +457,12 @@ export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode | null {
 
         const className = classNode.node.name.escapedText;
         const baseName = baseNode.node.expression.expression.escapedText;
-        const p: GraphNode = {};
+
         p.base = baseName;
         p.name = className;
-        return p;
     }
+
+    return p;
 }
 
 export function getFlowPath(flow: string): string {
