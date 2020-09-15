@@ -91,7 +91,6 @@ export class PreviewWebview extends WebviewBase {
 			scopes.push(['workspace', 'Workspace']);
 		}
 
-		const editor = vscode.window.activeTextEditor;
 		const flowDir = path.dirname(this._graphFilePath);
 		let graphNodes = getArkFBPFlowGraphNodes(flowDir);
 		let graphIndexNodes = getArkFBPGraphNodes(this._graphFilePath);

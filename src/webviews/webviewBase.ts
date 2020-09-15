@@ -208,8 +208,7 @@ export abstract class WebviewBase implements Disposable {
 	private _html: string | undefined;
 	private async getHtml(): Promise<string> {
 		const filename = this._context.asAbsolutePath(paths.join('dist/webviews/', this.filename));
-
-		let content;
+		let content: any;
 		// When we are debugging avoid any caching so that we can change the html and have it update without reloading
 		const debug = true;
 		if (debug) {
