@@ -142,7 +142,7 @@ export class AstModel {
 
     if(languageType === 'python') {
       if(!Array.isArray(parent)) {
-        return []
+        return [];
       }
 
       const returnStatement = parent.find((node: AstNode) => node.kind && syntaxKindToName(node.kind) === 'ReturnStatement');
@@ -170,9 +170,6 @@ export class AstModel {
         }) || [];
     }
       
-    
-    console.info(parent, 'parent');
-    
     return flowNodes;
   }
 }
@@ -245,7 +242,7 @@ export class FlowOutlineProvider implements vscode.TreeDataProvider<AstNode> {
     if (
       vscode.window.activeTextEditor &&
       vscode.window.activeTextEditor.document.uri.scheme === 'file' &&
-      ['javascript', 'typescript'].indexOf(
+      ['javascript', 'typescript', 'python'].indexOf(
         vscode.window.activeTextEditor.document.languageId
       ) > -1
     ) {

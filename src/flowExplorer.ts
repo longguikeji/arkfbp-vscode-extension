@@ -48,8 +48,6 @@ export class FlowsProvider
           flowReference = p.slice(flowRootDir.length + 1);
         }
       }
-
-      flowReference = flowReference.replace('/', '.');
     }
 
     if(flowReference !== '') {

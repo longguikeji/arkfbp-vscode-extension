@@ -92,19 +92,20 @@ export function getArkFBPFlowRootDir(root?: string): string {
     const languageType = getLanguageType();
     let rootDir: string = '';
     if(languageType === ('javascript' || 'typescript')) {
-        rootDir = 'src';
+        rootDir = path.join(root, 'src', ARKFBP_FLOW_DIR);
     }
 
     if(languageType === 'python') {
-        rootDir = 'app';
+        rootDir = root;
     }
 
-    return path.join(root, rootDir, ARKFBP_FLOW_DIR);
+    return rootDir;
 }
 
 export function getArkFBPFlows(dir: string, includeGroup: boolean = false): (string | [string, boolean])[] {
     const flows: (string | [string, boolean])[] = [];
     const elements = fs.readdirSync(dir);
+    const languageType = getLanguageType();
 
     elements.forEach(element => {
         if (isArkFBPFlow(path.join(dir, element))) {
@@ -112,7 +113,13 @@ export function getArkFBPFlows(dir: string, includeGroup: boolean = false): (str
         } else {
             if (includeGroup && fs.statSync(path.join(dir, element)).isDirectory()) {
                 // flow group
-                flows.push([element, true]);
+                if(languageType === 'python') {
+                    if(isArkFBPPythonFlow(path.join(dir, element))) {
+                        flows.push([element, true]);
+                    }
+                } else {
+                    flows.push([element, true]);
+                }
             }
         }
     });
@@ -178,6 +185,28 @@ export function getDatabases(): Database[] {
     });
 
     return databases;
+}
+
+export function isArkFBPPythonFlow(root: string): boolean {
+    try {
+        if(root.includes('flows')) {
+            return true;
+        }
+
+        let stat = fs.statSync(path.join(root, 'apps.py'));
+        if (!stat.isFile()) {
+            return false;
+        }
+
+        stat = fs.statSync(path.join(root, 'flows'));
+        if (!stat.isDirectory()) {
+            return false;
+        }
+
+        return true;
+    } catch (err) {
+        return false;
+    }
 }
 
 export function isArkFBPFlow(root: string): boolean {
@@ -529,28 +558,28 @@ export function getFlowDirPathByReference(workspaceRoot: string, reference: stri
     const languageType = getLanguageType();
     let rootDir: string = '';
     if(languageType === ('javascript' || 'typescript')) {
-        rootDir = 'src';
+        rootDir = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference);
     }
 
     if(languageType === 'python') {
-        rootDir = 'app';
+        rootDir = path.join(workspaceRoot, reference);
     }
 
-    return path.join(workspaceRoot, rootDir, ARKFBP_FLOW_DIR, reference);
+    return rootDir;
 }
 
 export function getFlowGraphDefinitionFileByReference(workspaceRoot: string, reference: string): string {
     const languageType = getLanguageType();
     let rootDir: string = '';
     if(languageType === ('javascript' || 'typescript')) {
-        rootDir = 'src';
+        rootDir = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference, getMainFileName());
     }
 
     if(languageType === 'python') {
-        rootDir = 'app';
+        rootDir = path.join(workspaceRoot, reference, getMainFileName());
     }
 
-    return path.join(workspaceRoot, rootDir, ARKFBP_FLOW_DIR, reference, getMainFileName());
+    return rootDir;
 }
 
 export function getFlowReferenceByAbsoluteFlowDirPath(p: string): string{
@@ -588,6 +617,12 @@ export function findNodeFilesByClass(flowDirPath: string, classID: string): stri
     });
 
     return matchedFiles;
+}
+
+export function createPythonApp(options: { flowPath: string, appName: string }): boolean {
+    cp.execFileSync('arkfbp-py', ['startapp', `${options.appName}`, '--topdir', `${options.flowPath}`]);
+
+    return true;
 }
 
 export function createJavaScriptFlow(options: { flow: string }): boolean {
