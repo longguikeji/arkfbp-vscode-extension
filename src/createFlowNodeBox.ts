@@ -58,7 +58,7 @@ export async function showCreateFlowNodeBox(flowReference?: string, node?: {type
 
 	let r: boolean = false;
 
-	if(languageType === ('javascript' || 'typescript')) {
+	if(languageType === 'javascript' || languageType ===  'typescript') {
 		r = arkfbp.createJavascriptNode({
 			flow: flowName,
 			base: baseClassName,

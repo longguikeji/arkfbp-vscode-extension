@@ -93,6 +93,7 @@ export default class FlowEditor extends Vue {
       },
       onNodeMoving: (id: string, x: number, y: number) => {
         const node = this.flow.getNodeById(id);
+        node.position = [x, y];
         this.debounceMoveNode({ flow: this.flow , node, x, y });
       },
       onConnect: (fromId: string, toId: string) => {

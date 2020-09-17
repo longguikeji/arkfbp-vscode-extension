@@ -91,7 +91,7 @@ export function getArkFBPFlowRootDir(root?: string): string {
     }
     const languageType = getLanguageType();
     let rootDir: string = '';
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
         rootDir = path.join(root, 'src', ARKFBP_FLOW_DIR);
     }
 
@@ -189,7 +189,7 @@ export function getDatabases(): Database[] {
 
 export function isArkFBPPythonFlow(root: string): boolean {
     try {
-        if(root.includes('flows')) {
+        if(root.includes(ARKFBP_FLOW_DIR)) {
             return true;
         }
 
@@ -198,7 +198,7 @@ export function isArkFBPPythonFlow(root: string): boolean {
             return false;
         }
 
-        stat = fs.statSync(path.join(root, 'flows'));
+        stat = fs.statSync(path.join(root, ARKFBP_FLOW_DIR));
         if (!stat.isDirectory()) {
             return false;
         }
@@ -332,7 +332,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
     const languageType = getLanguageType();
     let flowNodes = [];
 
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
         // Flow Class Definition
         const cls = nodes.find((node: GraphNode) => node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration');
 
@@ -463,7 +463,7 @@ export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode | null {
 
     const p: GraphNode = {};
     const languageType = getLanguageType();
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
         const node = nodes.find((node: GraphNode) => node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration');
 
         if(!node) {
@@ -557,7 +557,7 @@ export function runFlow(workspaceRoot: string, terminal: vscode.Terminal, flowNa
 export function getFlowDirPathByReference(workspaceRoot: string, reference: string): string {
     const languageType = getLanguageType();
     let rootDir: string = '';
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
         rootDir = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference);
     }
 
@@ -571,7 +571,7 @@ export function getFlowDirPathByReference(workspaceRoot: string, reference: stri
 export function getFlowGraphDefinitionFileByReference(workspaceRoot: string, reference: string): string {
     const languageType = getLanguageType();
     let rootDir: string = '';
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
         rootDir = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference, getMainFileName());
     }
 
@@ -663,115 +663,153 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
     x?: number,
     y?: number,
 }) {
+    const languageType = getLanguageType();
     const code = fs.readFileSync(graphFilePath).toString();
-    const result = babel.transform(code, {
-        plugins: getPlugins(),
-    });
-    
-    function getPlugins() {
-        switch (actionType) {
-            case 'createNode':
-                return [myImportInjector, myNodesInjector];
-            case 'moveNode':
-                return [myNodesInjector];
-            case 'removeNode':
-                return [myImportInjector, myNodesInjector];
-            case 'updateEdge':
-                return [myNodesInjector];
-            default:
-                break;
+
+    if(languageType === 'javascript' || languageType ===  'typescript') {
+        const result = babel.transform(code, {
+            plugins: getPlugins(),
+        });
+        
+        function getPlugins() {
+            switch (actionType) {
+                case 'createNode':
+                    return [myImportInjector, myNodesInjector];
+                case 'moveNode':
+                    return [myNodesInjector];
+                case 'removeNode':
+                    return [myImportInjector, myNodesInjector];
+                case 'updateEdge':
+                    return [myNodesInjector];
+                default:
+                    break;
+            }
         }
-    }
-
-    function myImportInjector({ type, template }: { type: any, template: any}) {
-        const myImport = template(`import { ${node.cls} } from "./nodes/${node.filename!}";`, { sourceType: "module" });
-        return {
-            visitor: {
-                Program(path: any, state: any) {
-                    switch (actionType) {
-                        case 'createNode':
-                            const lastImport = path.get("body").filter((p: any) => p.isImportDeclaration()).pop();
-                            if (lastImport) {
-                                lastImport.insertAfter(myImport());
-                            }
-                            break;
-                        case 'removeNode':
-                            path.parent.program.body = path.parent.program.body.filter((e: any) => e.type !== 'ImportDeclaration' || e.specifiers[0].local.name !== node.cls);
-                        default:
-                            break;
-                    }
-                },
-            },
-        };
-    }
-
-    function myNodesInjector({ types, template }: {types: any, template: any}) {
-        return {
-            visitor: {
-                ClassMethod(path: any, state: any) {
-                    if (path.node.key.name === 'createNodes') {
-                        const returnStatement = path.node.body.body[0];
-                        const arrayExpression = returnStatement.argument as any;
-                        const o1 = babelTypes.objectProperty(babelTypes.identifier('cls'), babelTypes.identifier(node.cls));
-                        const o2 = babelTypes.objectProperty(babelTypes.identifier('id'), babelTypes.stringLiteral(node.id));
-                        const o3 = node.x ? babelTypes.objectProperty(babelTypes.identifier('x'), babelTypes.numericLiteral(node.x)): null;
-                        const o4 = node.y ? babelTypes.objectProperty(babelTypes.identifier('y'), babelTypes.numericLiteral(node.y)): null;
-                        const o5 = node.next ? babelTypes.objectProperty(babelTypes.identifier('next'), babelTypes.stringLiteral(node.next)): null;
-
+    
+        function myImportInjector({ type, template }: { type: any, template: any}) {
+            const myImport = template(`import { ${node.cls} } from "./nodes/${node.filename!}";`, { sourceType: "module" });
+            return {
+                visitor: {
+                    Program(path: any, state: any) {
                         switch (actionType) {
                             case 'createNode':
-                                arrayExpression.elements.push(babelTypes.objectExpression([o1, o2, o3!, o4!]));
-                                break;
-                            case 'moveNode':
-                                arrayExpression.elements.forEach((item: any) => {
-                                    if(item.properties.find((e: any) => e.key.name === 'id').value.value === node.id) {
-                                        if(!item.properties.some((e: any) => e.key.name === 'x')){
-                                            item.properties.push(o3!);
-                                        }
-                                        if(!item.properties.some((e: any) => e.key.name === 'y')){
-                                            item.properties.push(o4!);
-                                        }
-                                        item.properties = item.properties.map((m: any) => {
-                                            if(m.key.name === 'x') {
-                                                m.value.value = node.x;
-                                                return m;
-                                            } else if(m.key.name === 'y') {
-                                                m.value.value = node.y;
-                                                return m;
-                                            } else {
-                                                return m;
-                                            }
-                                        });
-                                    }
-                                });
+                                const lastImport = path.get("body").filter((p: any) => p.isImportDeclaration()).pop();
+                                if (lastImport) {
+                                    lastImport.insertAfter(myImport());
+                                }
                                 break;
                             case 'removeNode':
-                                arrayExpression.elements = arrayExpression.elements.filter((item: any) => 
-                                    item.properties.find((e: any) => e.key.name === 'id').value.value !== node.id
-                                );
+                                path.parent.program.body = path.parent.program.body.filter((e: any) => e.type !== 'ImportDeclaration' || e.specifiers[0].local.name !== node.cls);
+                            default:
                                 break;
-                            case 'updateEdge':
+                        }
+                    },
+                },
+            };
+        }
+    
+        function myNodesInjector({ types, template }: {types: any, template: any}) {
+            return {
+                visitor: {
+                    ClassMethod(path: any, state: any) {
+                        if (path.node.key.name === 'createNodes') {
+                            const returnStatement = path.node.body.body[0];
+                            const arrayExpression = returnStatement.argument as any;
+                            const clsProperty = babelTypes.objectProperty(babelTypes.identifier('cls'), babelTypes.identifier(node.cls));
+                            const idProperty = babelTypes.objectProperty(babelTypes.identifier('id'), babelTypes.stringLiteral(node.id));
+                            const xProperty = node.x ? babelTypes.objectProperty(babelTypes.identifier('x'), babelTypes.numericLiteral(node.x)): null;
+                            const yProperty = node.y ? babelTypes.objectProperty(babelTypes.identifier('y'), babelTypes.numericLiteral(node.y)): null;
+                            const nextProperty = node.next ? babelTypes.objectProperty(babelTypes.identifier('next'), babelTypes.stringLiteral(node.next)): null;
+                            const expression = [clsProperty, idProperty, xProperty!, yProperty!];
+
+                            if(actionType === 'createNode') {
+                                arrayExpression.elements.push(babelTypes.objectExpression(expression));
+                            }
+
+                            if(actionType === 'moveNode' || actionType === 'updateEdge') {
                                 arrayExpression.elements = arrayExpression.elements.map((item: any) => {
                                     if(item.properties.find((e: any) => e.key.name === 'id').value.value === node.id) {
-                                        return babelTypes.objectExpression(o5 ? [o1, o2, o3!, o4!, o5] : [o1, o2, o3!, o4!]);
+                                        return babelTypes.objectExpression(nextProperty ? [...expression, nextProperty] : expression);
                                     } else {
                                         return item;
                                     }
                                 });
-                            default:
-                                break;
+                            }
+
+                            if(actionType === 'removeNode') {
+                                arrayExpression.elements = arrayExpression.elements.filter((item: any) => 
+                                    item.properties.find((e: any) => e.key.name === 'id').value.value !== node.id
+                                );
+                            }
                         }
                     }
-                }
-            },
+                },
+            };
         };
-    };
 
-    if (!result){
-        return;
+        if (!result){
+            return;
+        }
+
+        fs.writeFileSync(graphFilePath, result.code);
     }
 
-    fs.writeFileSync(graphFilePath, result.code);
+    if(languageType === 'python') {
+        const clsProperty = ts.createPropertyAssignment(ts.createStringLiteral('cls'), ts.createIdentifier(node.cls));
+        const idProperty = ts.createPropertyAssignment(ts.createStringLiteral('id'), ts.createStringLiteral(node.id));
+        const xProperty = node.x ? ts.createPropertyAssignment(ts.createStringLiteral('x'), ts.createLiteral(node.x)): null;
+        const yProperty = node.y ? ts.createPropertyAssignment(ts.createStringLiteral('y'), ts.createLiteral(node.y)): null;
+        const nextProperty = node.next ? ts.createPropertyAssignment(ts.createStringLiteral('next'), ts.createStringLiteral(node.next)): null;
+        const expression = [clsProperty, idProperty, xProperty!, yProperty!];
+
+        const returnCode = code.slice(code.indexOf('return'))
+        console.info(xProperty, 'xProperty')
+        const sfile = ts.createSourceFile(
+            graphFilePath,
+            returnCode,
+            ts.ScriptTarget.Latest
+        );
+        const printer = ts.createPrinter();
+
+        const transformer = (context: any) => {
+            return (rootNode: any) => {
+                function visit(cNode: any) {
+                    cNode = ts.visitEachChild(cNode, visit, context);
+                    if (ts.isReturnStatement(cNode)) {
+                        console.info(cNode, 'cNode')
+                        const elements = (cNode as any).expression.elements;
+                        console.info(elements, 'elements');
+                        (cNode as any).expression.elements = (cNode as any).expression.elements.map((item: any) => {
+                            if(item.properties.find((e: any) => e.name.text === 'id').initializer.text === node.id) {
+                                return ts.createObjectLiteral(nextProperty ? [...expression, nextProperty] : expression, true);
+                            } else {
+                                return item;
+                            }
+                        });
+                    }
+                    return cNode;
+                }
+                return ts.visitNode(rootNode, visit);
+            }
+        }
+
+        const result = ts.transform(
+            sfile, [transformer]
+        );
+
+        if (!result){
+            return;
+        }
+
+        const transformedSourceFile = result.transformed[0];
+        const newCode = printer.printFile(transformedSourceFile)
+
+        const text = code.slice(0, code.indexOf('return') - code.length) + newCode.slice(0, -2);
+        console.info(transformedSourceFile, 'transformedSourceFile')
+        console.info(newCode, 'newCode')
+        console.info(text, 'text')
+        fs.writeFileSync(graphFilePath, text);
+    }
 }
 
 export async function openNodeFileFromGraph(graphFilePath: string, node: {cls: string}) {

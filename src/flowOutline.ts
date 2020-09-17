@@ -91,7 +91,7 @@ export class AstModel {
     const languageType = getLanguageType();
     let flowNodes: AstNode[] = [];
 
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
       // Flow Class Definition
       let node: AstNode = {};
       if(Array.isArray(parent)) {
