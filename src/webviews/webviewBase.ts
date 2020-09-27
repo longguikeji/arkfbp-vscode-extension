@@ -21,7 +21,7 @@ import {
 	UpdateConfigurationCommandType
 } from './protocol';
 import { ExtensionContext } from 'vscode';
-import { getFlowReference, updateFlowGraph, openNodeFileFromGraph } from './../arkfbp';
+import { getFlowReference, updateFlowGraph, openNodeFileFromGraph, removeNodeFileFromGraph } from './../arkfbp';
 import { showCreateFlowNodeBox } from './../createFlowNodeBox';
 // import { Commands } from '../commands';
 
@@ -301,6 +301,7 @@ export abstract class WebviewBase implements Disposable {
 						updateFlowGraph('moveNode', graphFilePath, message.node);
 						return;
 					case 'removeNode':
+						await removeNodeFileFromGraph(graphFilePath, message.node);
 						updateFlowGraph('removeNode', graphFilePath, message.node);
 						this.resetPanel();
 						return;

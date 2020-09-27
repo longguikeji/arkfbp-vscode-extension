@@ -38,7 +38,7 @@ export async function showCreateFlowBox(root?: string) {
 
 	if(languageType === 'javascript' || languageType ===  'typescript') {
 		r = arkfbp.createJavaScriptFlow({
-			flow: flow.replace('/', '.'),
+			flow: flow.replace(/\//g, '.'),
 		});
 	}
 

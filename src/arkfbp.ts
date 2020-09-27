@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as vscode from 'vscode';
+import * as rimraf from 'rimraf';
 import * as cp from 'child_process';
 import * as babel from '@babel/core';
 import * as babelTypes from "@babel/types";
@@ -10,6 +11,7 @@ import { workspace, TextDocument } from 'vscode';
 import * as ts from 'typescript';
 
 import { runCommandInIntegratedTerminal } from './util';
+import { provide } from './extension';
 import { Database, Table } from './models/database';
 import {
     parse,
@@ -189,7 +191,7 @@ export function getDatabases(): Database[] {
 
 export function isArkFBPPythonFlow(root: string): boolean {
     try {
-        if(root.includes(ARKFBP_FLOW_DIR)) {
+        if(root.includes(ARKFBP_FLOW_DIR) && !root.includes('__pycache__')) {
             return true;
         }
 
@@ -520,7 +522,17 @@ export function getFlowReference(graphFilePath: string): string {
  * @param flowDirPath: flow directory path
  */
 export function getArkFBPFlowGraphNodes(flowDirPath: string): GraphNode[] {
-    const elements = fs.readdirSync(path.join(flowDirPath, 'nodes')).filter((item: string) => !item.includes('__init__'));
+    const elements = fs.readdirSync(path.join(flowDirPath, 'nodes')).filter((item: string) => {
+        if(item.includes('__init__')) {
+            return false
+        }
+
+        if(item.includes('__pycache__')) {
+            return false
+        }
+
+        return true
+    });
     const graphNodes: GraphNode[] = [];
 
     for (var i = 0; i < elements.length; ++i) {
@@ -665,43 +677,31 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
 }) {
     const languageType = getLanguageType();
     const code = fs.readFileSync(graphFilePath).toString();
+    let isRemoveImport = true;
 
     if(languageType === 'javascript' || languageType ===  'typescript') {
-        const result = babel.transform(code, {
-            plugins: getPlugins(),
+        let result = babel.transform(code, {
+            plugins: [myNodesInjector],
         });
-        
-        function getPlugins() {
-            switch (actionType) {
-                case 'createNode':
-                    return [myImportInjector, myNodesInjector];
-                case 'moveNode':
-                    return [myNodesInjector];
-                case 'removeNode':
-                    return [myImportInjector, myNodesInjector];
-                case 'updateEdge':
-                    return [myNodesInjector];
-                default:
-                    break;
-            }
-        }
+
+        result = babel.transform(result.code, {
+            plugins: [myImportInjector],
+        });
     
         function myImportInjector({ type, template }: { type: any, template: any}) {
             const myImport = template(`import { ${node.cls} } from "./nodes/${node.filename!}";`, { sourceType: "module" });
             return {
                 visitor: {
                     Program(path: any, state: any) {
-                        switch (actionType) {
-                            case 'createNode':
-                                const lastImport = path.get("body").filter((p: any) => p.isImportDeclaration()).pop();
-                                if (lastImport) {
-                                    lastImport.insertAfter(myImport());
-                                }
-                                break;
-                            case 'removeNode':
-                                path.parent.program.body = path.parent.program.body.filter((e: any) => e.type !== 'ImportDeclaration' || e.specifiers[0].local.name !== node.cls);
-                            default:
-                                break;
+                        if(actionType === 'createNode') {
+                            const lastImport = path.get("body").filter((p: any) => p.isImportDeclaration()).pop();
+                            if (lastImport) {
+                                lastImport.insertAfter(myImport());
+                            }
+                        }
+
+                        if(actionType === 'removeNode' && isRemoveImport) {
+                            path.parent.program.body = path.parent.program.body.filter((p: any) => p.type !== 'ImportDeclaration' || p.specifiers[0].local.name !== node.cls);
                         }
                     },
                 },
@@ -740,6 +740,7 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
                                 arrayExpression.elements = arrayExpression.elements.filter((item: any) => 
                                     item.properties.find((e: any) => e.key.name === 'id').value.value !== node.id
                                 );
+                                isRemoveImport = !arrayExpression.elements.some((item: any) => item.properties.find((e: any) => e.key.name === 'cls').value.name === node.cls);
                             }
                         }
                     }
@@ -755,60 +756,25 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
     }
 
     if(languageType === 'python') {
-        const clsProperty = ts.createPropertyAssignment(ts.createStringLiteral('cls'), ts.createIdentifier(node.cls));
-        const idProperty = ts.createPropertyAssignment(ts.createStringLiteral('id'), ts.createStringLiteral(node.id));
-        const xProperty = node.x ? ts.createPropertyAssignment(ts.createStringLiteral('x'), ts.createLiteral(node.x)): null;
-        const yProperty = node.y ? ts.createPropertyAssignment(ts.createStringLiteral('y'), ts.createLiteral(node.y)): null;
-        const nextProperty = node.next ? ts.createPropertyAssignment(ts.createStringLiteral('next'), ts.createStringLiteral(node.next)): null;
-        const expression = [clsProperty, idProperty, xProperty!, yProperty!];
+        const appDir = getArkFBPAppDir();
+        const rootDir = appDir.split('/').slice(0, -1).join('/')
+        const flowReference = graphFilePath.replace(rootDir, '').split('/').slice(2, -1).join('.');
+        const nodeReference = flowReference + '.nodes.' + node.filename + '.' + node.cls;
 
-        const returnCode = code.slice(code.indexOf('return'))
-        console.info(xProperty, 'xProperty')
-        const sfile = ts.createSourceFile(
-            graphFilePath,
-            returnCode,
-            ts.ScriptTarget.Latest
-        );
-        const printer = ts.createPrinter();
-
-        const transformer = (context: any) => {
-            return (rootNode: any) => {
-                function visit(cNode: any) {
-                    cNode = ts.visitEachChild(cNode, visit, context);
-                    if (ts.isReturnStatement(cNode)) {
-                        console.info(cNode, 'cNode')
-                        const elements = (cNode as any).expression.elements;
-                        console.info(elements, 'elements');
-                        (cNode as any).expression.elements = (cNode as any).expression.elements.map((item: any) => {
-                            if(item.properties.find((e: any) => e.name.text === 'id').initializer.text === node.id) {
-                                return ts.createObjectLiteral(nextProperty ? [...expression, nextProperty] : expression, true);
-                            } else {
-                                return item;
-                            }
-                        });
-                    }
-                    return cNode;
-                }
-                return ts.visitNode(rootNode, visit);
-            }
+        if(actionType === 'createNode') {
+            const args = ['ext_addnode', '--topdir', `${appDir}`, '--flow', `${flowReference}`, '--class', `${nodeReference}`, '--id', `${node.id}`, '--x', `${node.x}`, '--y', `${node.y}`];
+            cp.execFileSync('arkfbp-py', args);
         }
 
-        const result = ts.transform(
-            sfile, [transformer]
-        );
-
-        if (!result){
-            return;
+        if(actionType === 'moveNode' || actionType === 'updateEdge') {
+            const args = ['ext_updatenode', '--topdir', `${appDir}`, '--flow', `${flowReference}`, '--id', `${node.id}`, '--next', `${node.next || 'undefined'}`, '--x', `${node.x}`, '--y', `${node.y}`];
+            cp.execFileSync('arkfbp-py', args);
         }
 
-        const transformedSourceFile = result.transformed[0];
-        const newCode = printer.printFile(transformedSourceFile)
-
-        const text = code.slice(0, code.indexOf('return') - code.length) + newCode.slice(0, -2);
-        console.info(transformedSourceFile, 'transformedSourceFile')
-        console.info(newCode, 'newCode')
-        console.info(text, 'text')
-        fs.writeFileSync(graphFilePath, text);
+        if(actionType === 'removeNode') {
+            const args = ['ext_removenode', '--topdir', `${appDir}`, '--flow', `${flowReference}`, '--id', `${node.id}`];
+            cp.execFileSync('arkfbp-py', args);
+        }
     }
 }
 
@@ -826,6 +792,34 @@ export async function openNodeFileFromGraph(graphFilePath: string, node: {cls: s
     await vscode.workspace.openTextDocument(files[0]).then(doc => {
         vscode.window.showTextDocument(doc);
     });
+}
+
+export async function removeNodeFileFromGraph(graphFilePath: string, node: {cls: string, id: string}) {
+    const flowDir = path.dirname(graphFilePath);
+    const files = findNodeFilesByClass(flowDir, node.cls);
+
+    const result = await vscode.window.showWarningMessage('确认删除该节点么? \n该操作不可逆', {
+        modal: true,
+    }, 'OK');
+
+    if (typeof result !== 'undefined') {
+        if (files.length === 0) {
+            vscode.window.showErrorMessage('找不到对应的节点定义文件');
+            return;
+        }
+
+        if (files.length > 1) {
+            vscode.window.showWarningMessage('多于一个的定义文件，默认显示第一个匹配的文件');
+        }
+        rimraf.sync(files[0]);
+        provide.flowOutlineDataProvider.refresh();
+
+        if (typeof node.id !== 'undefined') {
+            vscode.window.showInformationMessage(`The flow node ${node.cls} with id: ${node.id} deleted`);
+        } else {
+            vscode.window.showInformationMessage(`The flow node ${node.cls} with no id deleted`);
+        }
+    }
 }
 
 export function createDatabase(options: { name: string }): boolean {

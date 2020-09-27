@@ -96,6 +96,4 @@ export async function showCreateFlowNodeBox(flowReference?: string, node?: {type
 	if(previewWebview) {
 		previewWebview.resetPanel();
 	}
-
-	window.showInformationMessage(`新节点${className}创建成功`);
 }

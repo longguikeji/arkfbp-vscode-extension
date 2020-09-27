@@ -30,6 +30,7 @@ import * as arkfbp from './arkfbp';
 import { DatabaseProvider} from './databaseExplorer';
 
 export const previewWebviewList: PreviewWebview[] = [];
+export const provide: any = {};
 
 export function deactivate() {
 	if (terminal) {
@@ -71,6 +72,8 @@ export async function activate(context: ExtensionContext) {
 		context,
 		rootPath
 	);
+	provide.appProvider = appProvider;
+
 	vscode.window.registerTreeDataProvider("arkfbp.explorer.info", appProvider);
 	context.subscriptions.push(
 		vscode.commands.registerCommand("arkfbp.explorer.info.action.build", () => {
@@ -93,6 +96,8 @@ export async function activate(context: ExtensionContext) {
 			context,
 			rootPath
 		);
+		provide.dependencyProvider = dependencyProvider;
+
 		vscode.window.registerTreeDataProvider("arkfbp.explorer.dependency", dependencyProvider);
 		context.subscriptions.push(
 			vscode.commands.registerCommand('arkfbp.explorer.dependency.action.openDocumentPage', async (item: any) => {
@@ -107,6 +112,8 @@ export async function activate(context: ExtensionContext) {
 			context,
 			rootPath
 		);
+		provide.databaseProvider = databaseProvider;
+
 		vscode.window.registerTreeDataProvider("arkfbp.explorer.database", databaseProvider);
 		context.subscriptions.push(
 			vscode.commands.registerCommand("arkfbp.explorer.database.action.create", () => databaseProvider.create())
@@ -122,6 +129,7 @@ export async function activate(context: ExtensionContext) {
 		rootPath,
 		terminal
 	);
+	provide.flowProvider = flowProvider;
 
 	vscode.window.registerTreeDataProvider("arkfbp.explorer.flow", flowProvider);
 	context.subscriptions.push(
@@ -192,6 +200,8 @@ export async function activate(context: ExtensionContext) {
 
 
 	const flowOutlineDataProvider = new FlowOutlineProvider(context);
+	provide.flowOutlineDataProvider = flowOutlineDataProvider;
+
 	vscode.window.createTreeView('arkfbp.explorer.flowOutline', {
 		treeDataProvider: flowOutlineDataProvider,
 	});
