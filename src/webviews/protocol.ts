@@ -65,5 +65,4 @@ export interface AppStateWithConfig {
 export interface PreviewState extends AppStateWithConfig {
 
 	graphNodes: GraphNode[],
-	filePath: string,
 }

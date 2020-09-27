@@ -106,7 +106,6 @@ export class PreviewWebview extends WebviewBase {
 				if (graphNode.name === node.cls) {
 					node.name = graphNode.name;
 					node.base = graphNode.base;
-					graphNodes.splice(i, 1);
 					break;
 				} else {
 					node.base = node.cls;
@@ -117,8 +116,8 @@ export class PreviewWebview extends WebviewBase {
 
 		const state: PreviewState = {
 			graphNodes: graphIndexNodes,
-			filePath: flowDir,
 		};
+
 		return `<script type="text/javascript" nonce="Z2l0bGVucy1ib290c3RyYXA=">window.state = ${JSON.stringify(
 			state
 		)}; window.acquireVsCodeApi = acquireVsCodeApi();</script>`;

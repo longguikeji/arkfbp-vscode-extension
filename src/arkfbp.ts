@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as vscode from 'vscode';
+import * as rimraf from 'rimraf';
 import * as cp from 'child_process';
 import * as babel from '@babel/core';
 import * as babelTypes from "@babel/types";
@@ -10,6 +11,7 @@ import { workspace, TextDocument } from 'vscode';
 import * as ts from 'typescript';
 
 import { runCommandInIntegratedTerminal } from './util';
+import { provide } from './extension';
 import { Database, Table } from './models/database';
 import {
     parse,
@@ -91,7 +93,7 @@ export function getArkFBPFlowRootDir(root?: string): string {
     }
     const languageType = getLanguageType();
     let rootDir: string = '';
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
         rootDir = path.join(root, 'src', ARKFBP_FLOW_DIR);
     }
 
@@ -189,7 +191,7 @@ export function getDatabases(): Database[] {
 
 export function isArkFBPPythonFlow(root: string): boolean {
     try {
-        if(root.includes('flows')) {
+        if(root.includes(ARKFBP_FLOW_DIR) && !root.includes('__pycache__')) {
             return true;
         }
 
@@ -198,7 +200,7 @@ export function isArkFBPPythonFlow(root: string): boolean {
             return false;
         }
 
-        stat = fs.statSync(path.join(root, 'flows'));
+        stat = fs.statSync(path.join(root, ARKFBP_FLOW_DIR));
         if (!stat.isDirectory()) {
             return false;
         }
@@ -332,7 +334,7 @@ export function getArkFBPGraphNodes(graphFilePath: string): GraphNode[] {
     const languageType = getLanguageType();
     let flowNodes = [];
 
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
         // Flow Class Definition
         const cls = nodes.find((node: GraphNode) => node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration');
 
@@ -463,7 +465,7 @@ export function getArkFBPGraphNodeFromFile(filePath: string): GraphNode | null {
 
     const p: GraphNode = {};
     const languageType = getLanguageType();
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
         const node = nodes.find((node: GraphNode) => node.kind && syntaxKindToName(node.kind) === 'ClassDeclaration');
 
         if(!node) {
@@ -520,7 +522,17 @@ export function getFlowReference(graphFilePath: string): string {
  * @param flowDirPath: flow directory path
  */
 export function getArkFBPFlowGraphNodes(flowDirPath: string): GraphNode[] {
-    const elements = fs.readdirSync(path.join(flowDirPath, 'nodes')).filter((item: string) => !item.includes('__init__'));
+    const elements = fs.readdirSync(path.join(flowDirPath, 'nodes')).filter((item: string) => {
+        if(item.includes('__init__')) {
+            return false;
+        }
+
+        if(item.includes('__pycache__')) {
+            return false;
+        }
+
+        return true;
+    });
     const graphNodes: GraphNode[] = [];
 
     for (var i = 0; i < elements.length; ++i) {
@@ -557,7 +569,7 @@ export function runFlow(workspaceRoot: string, terminal: vscode.Terminal, flowNa
 export function getFlowDirPathByReference(workspaceRoot: string, reference: string): string {
     const languageType = getLanguageType();
     let rootDir: string = '';
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
         rootDir = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference);
     }
 
@@ -571,7 +583,7 @@ export function getFlowDirPathByReference(workspaceRoot: string, reference: stri
 export function getFlowGraphDefinitionFileByReference(workspaceRoot: string, reference: string): string {
     const languageType = getLanguageType();
     let rootDir: string = '';
-    if(languageType === ('javascript' || 'typescript')) {
+    if(languageType === 'javascript' || languageType ===  'typescript') {
         rootDir = path.join(workspaceRoot, 'src', ARKFBP_FLOW_DIR, reference, getMainFileName());
     }
 
@@ -663,115 +675,111 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
     x?: number,
     y?: number,
 }) {
+    const languageType = getLanguageType();
     const code = fs.readFileSync(graphFilePath).toString();
-    const result = babel.transform(code, {
-        plugins: getPlugins(),
-    });
-    
-    function getPlugins() {
-        switch (actionType) {
-            case 'createNode':
-                return [myImportInjector, myNodesInjector];
-            case 'moveNode':
-                return [myNodesInjector];
-            case 'removeNode':
-                return [myImportInjector, myNodesInjector];
-            case 'updateEdge':
-                return [myNodesInjector];
-            default:
-                break;
-        }
-    }
+    let isRemoveImport = true;
 
-    function myImportInjector({ type, template }: { type: any, template: any}) {
-        const myImport = template(`import { ${node.cls} } from "./nodes/${node.filename!}";`, { sourceType: "module" });
-        return {
-            visitor: {
-                Program(path: any, state: any) {
-                    switch (actionType) {
-                        case 'createNode':
+    if(languageType === 'javascript' || languageType ===  'typescript') {
+        const nodesResult = babel.transform(code, {
+            plugins: [myNodesInjector],
+        });
+
+        if (!nodesResult){
+            return;
+        }
+
+        const result = babel.transform(nodesResult.code as string, {
+            plugins: [myImportInjector],
+        });
+    
+        function myImportInjector({ type, template }: { type: any, template: any}) {
+            const myImport = template(`import { ${node.cls} } from "./nodes/${node.filename!}";`, { sourceType: "module" });
+            return {
+                visitor: {
+                    Program(path: any, state: any) {
+                        if(actionType === 'createNode') {
                             const lastImport = path.get("body").filter((p: any) => p.isImportDeclaration()).pop();
                             if (lastImport) {
                                 lastImport.insertAfter(myImport());
                             }
-                            break;
-                        case 'removeNode':
-                            path.parent.program.body = path.parent.program.body.filter((e: any) => e.type !== 'ImportDeclaration' || e.specifiers[0].local.name !== node.cls);
-                        default:
-                            break;
-                    }
+                        }
+
+                        if(actionType === 'removeNode' && isRemoveImport) {
+                            path.parent.program.body = path.parent.program.body.filter((p: any) => p.type !== 'ImportDeclaration' || p.specifiers[0].local.name !== node.cls);
+                        }
+                    },
                 },
-            },
-        };
-    }
+            };
+        }
+    
+        function myNodesInjector({ types, template }: {types: any, template: any}) {
+            return {
+                visitor: {
+                    ClassMethod(path: any, state: any) {
+                        if (path.node.key.name === 'createNodes') {
+                            const returnStatement = path.node.body.body[0];
+                            const arrayExpression = returnStatement.argument as any;
+                            const clsProperty = babelTypes.objectProperty(babelTypes.identifier('cls'), babelTypes.identifier(node.cls));
+                            const idProperty = babelTypes.objectProperty(babelTypes.identifier('id'), babelTypes.stringLiteral(node.id));
+                            const xProperty = node.x ? babelTypes.objectProperty(babelTypes.identifier('x'), babelTypes.numericLiteral(node.x)): null;
+                            const yProperty = node.y ? babelTypes.objectProperty(babelTypes.identifier('y'), babelTypes.numericLiteral(node.y)): null;
+                            const nextProperty = node.next ? babelTypes.objectProperty(babelTypes.identifier('next'), babelTypes.stringLiteral(node.next)): null;
+                            const expression = [clsProperty, idProperty, xProperty!, yProperty!];
 
-    function myNodesInjector({ types, template }: {types: any, template: any}) {
-        return {
-            visitor: {
-                ClassMethod(path: any, state: any) {
-                    if (path.node.key.name === 'createNodes') {
-                        const returnStatement = path.node.body.body[0];
-                        const arrayExpression = returnStatement.argument as any;
-                        const o1 = babelTypes.objectProperty(babelTypes.identifier('cls'), babelTypes.identifier(node.cls));
-                        const o2 = babelTypes.objectProperty(babelTypes.identifier('id'), babelTypes.stringLiteral(node.id));
-                        const o3 = node.x ? babelTypes.objectProperty(babelTypes.identifier('x'), babelTypes.numericLiteral(node.x)): null;
-                        const o4 = node.y ? babelTypes.objectProperty(babelTypes.identifier('y'), babelTypes.numericLiteral(node.y)): null;
-                        const o5 = node.next ? babelTypes.objectProperty(babelTypes.identifier('next'), babelTypes.stringLiteral(node.next)): null;
+                            if(actionType === 'createNode') {
+                                arrayExpression.elements.push(babelTypes.objectExpression(expression));
+                            }
 
-                        switch (actionType) {
-                            case 'createNode':
-                                arrayExpression.elements.push(babelTypes.objectExpression([o1, o2, o3!, o4!]));
-                                break;
-                            case 'moveNode':
-                                arrayExpression.elements.forEach((item: any) => {
-                                    if(item.properties.find((e: any) => e.key.name === 'id').value.value === node.id) {
-                                        if(!item.properties.some((e: any) => e.key.name === 'x')){
-                                            item.properties.push(o3!);
-                                        }
-                                        if(!item.properties.some((e: any) => e.key.name === 'y')){
-                                            item.properties.push(o4!);
-                                        }
-                                        item.properties = item.properties.map((m: any) => {
-                                            if(m.key.name === 'x') {
-                                                m.value.value = node.x;
-                                                return m;
-                                            } else if(m.key.name === 'y') {
-                                                m.value.value = node.y;
-                                                return m;
-                                            } else {
-                                                return m;
-                                            }
-                                        });
-                                    }
-                                });
-                                break;
-                            case 'removeNode':
-                                arrayExpression.elements = arrayExpression.elements.filter((item: any) => 
-                                    item.properties.find((e: any) => e.key.name === 'id').value.value !== node.id
-                                );
-                                break;
-                            case 'updateEdge':
+                            if(actionType === 'moveNode' || actionType === 'updateEdge') {
                                 arrayExpression.elements = arrayExpression.elements.map((item: any) => {
                                     if(item.properties.find((e: any) => e.key.name === 'id').value.value === node.id) {
-                                        return babelTypes.objectExpression(o5 ? [o1, o2, o3!, o4!, o5] : [o1, o2, o3!, o4!]);
+                                        return babelTypes.objectExpression(nextProperty ? [...expression, nextProperty] : expression);
                                     } else {
                                         return item;
                                     }
                                 });
-                            default:
-                                break;
+                            }
+
+                            if(actionType === 'removeNode') {
+                                arrayExpression.elements = arrayExpression.elements.filter((item: any) => 
+                                    item.properties.find((e: any) => e.key.name === 'id').value.value !== node.id
+                                );
+                                isRemoveImport = !arrayExpression.elements.some((item: any) => item.properties.find((e: any) => e.key.name === 'cls').value.name === node.cls);
+                            }
                         }
                     }
-                }
-            },
+                },
+            };
         };
-    };
 
-    if (!result){
-        return;
+        if (!result){
+            return;
+        }
+
+        fs.writeFileSync(graphFilePath, result.code);
     }
 
-    fs.writeFileSync(graphFilePath, result.code);
+    if(languageType === 'python') {
+        const appDir = getArkFBPAppDir();
+        const rootDir = appDir.split('/').slice(0, -1).join('/');
+        const flowReference = graphFilePath.replace(rootDir, '').split('/').slice(2, -1).join('.');
+        const nodeReference = flowReference + '.nodes.' + node.filename + '.' + node.cls;
+
+        if(actionType === 'createNode') {
+            const args = ['ext_addnode', '--topdir', `${appDir}`, '--flow', `${flowReference}`, '--class', `${nodeReference}`, '--id', `${node.id}`, '--x', `${node.x}`, '--y', `${node.y}`];
+            cp.execFileSync('arkfbp-py', args);
+        }
+
+        if(actionType === 'moveNode' || actionType === 'updateEdge') {
+            const args = ['ext_updatenode', '--topdir', `${appDir}`, '--flow', `${flowReference}`, '--id', `${node.id}`, '--next', `${node.next || 'undefined'}`, '--x', `${node.x}`, '--y', `${node.y}`];
+            cp.execFileSync('arkfbp-py', args);
+        }
+
+        if(actionType === 'removeNode') {
+            const args = ['ext_removenode', '--topdir', `${appDir}`, '--flow', `${flowReference}`, '--id', `${node.id}`];
+            cp.execFileSync('arkfbp-py', args);
+        }
+    }
 }
 
 export async function openNodeFileFromGraph(graphFilePath: string, node: {cls: string}) {
@@ -788,6 +796,34 @@ export async function openNodeFileFromGraph(graphFilePath: string, node: {cls: s
     await vscode.workspace.openTextDocument(files[0]).then(doc => {
         vscode.window.showTextDocument(doc);
     });
+}
+
+export async function removeNodeFileFromGraph(graphFilePath: string, node: {cls: string, id: string}) {
+    const flowDir = path.dirname(graphFilePath);
+    const files = findNodeFilesByClass(flowDir, node.cls);
+
+    const result = await vscode.window.showWarningMessage('确认删除该节点么? \n该操作不可逆', {
+        modal: true,
+    }, 'OK');
+
+    if (typeof result !== 'undefined') {
+        if (files.length === 0) {
+            vscode.window.showErrorMessage('找不到对应的节点定义文件');
+            return;
+        }
+
+        if (files.length > 1) {
+            vscode.window.showWarningMessage('多于一个的定义文件，默认显示第一个匹配的文件');
+        }
+        rimraf.sync(files[0]);
+        provide.flowOutlineDataProvider.refresh();
+
+        if (typeof node.id !== 'undefined') {
+            vscode.window.showInformationMessage(`The flow node ${node.cls} with id: ${node.id} deleted`);
+        } else {
+            vscode.window.showInformationMessage(`The flow node ${node.cls} with no id deleted`);
+        }
+    }
 }
 
 export function createDatabase(options: { name: string }): boolean {
