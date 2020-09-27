@@ -524,14 +524,14 @@ export function getFlowReference(graphFilePath: string): string {
 export function getArkFBPFlowGraphNodes(flowDirPath: string): GraphNode[] {
     const elements = fs.readdirSync(path.join(flowDirPath, 'nodes')).filter((item: string) => {
         if(item.includes('__init__')) {
-            return false
+            return false;
         }
 
         if(item.includes('__pycache__')) {
-            return false
+            return false;
         }
 
-        return true
+        return true;
     });
     const graphNodes: GraphNode[] = [];
 
@@ -680,11 +680,15 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
     let isRemoveImport = true;
 
     if(languageType === 'javascript' || languageType ===  'typescript') {
-        let result = babel.transform(code, {
+        const nodesResult = babel.transform(code, {
             plugins: [myNodesInjector],
         });
 
-        result = babel.transform(result.code, {
+        if (!nodesResult){
+            return;
+        }
+
+        const result = babel.transform(nodesResult.code as string, {
             plugins: [myImportInjector],
         });
     
@@ -757,7 +761,7 @@ export function updateFlowGraph(actionType: string, graphFilePath: string, node:
 
     if(languageType === 'python') {
         const appDir = getArkFBPAppDir();
-        const rootDir = appDir.split('/').slice(0, -1).join('/')
+        const rootDir = appDir.split('/').slice(0, -1).join('/');
         const flowReference = graphFilePath.replace(rootDir, '').split('/').slice(2, -1).join('.');
         const nodeReference = flowReference + '.nodes.' + node.filename + '.' + node.cls;
 
