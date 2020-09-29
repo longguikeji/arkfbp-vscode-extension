@@ -11,7 +11,6 @@ import { workspace, TextDocument } from 'vscode';
 import * as ts from 'typescript';
 
 import { runCommandInIntegratedTerminal } from './util';
-import { provide } from './extension';
 import { Database, Table } from './models/database';
 import {
     parse,
@@ -816,7 +815,6 @@ export async function removeNodeFileFromGraph(graphFilePath: string, node: {cls:
             vscode.window.showWarningMessage('多于一个的定义文件，默认显示第一个匹配的文件');
         }
         rimraf.sync(files[0]);
-        provide.flowOutlineDataProvider.refresh();
 
         if (typeof node.id !== 'undefined') {
             vscode.window.showInformationMessage(`The flow node ${node.cls} with id: ${node.id} deleted`);
