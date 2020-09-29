@@ -21,6 +21,7 @@ import {
 	UpdateConfigurationCommandType
 } from './protocol';
 import { ExtensionContext } from 'vscode';
+import { provide } from './../extension';
 import { getFlowReference, updateFlowGraph, openNodeFileFromGraph, removeNodeFileFromGraph } from './../arkfbp';
 import { showCreateFlowNodeBox } from './../createFlowNodeBox';
 // import { Commands } from '../commands';
@@ -195,6 +196,7 @@ export abstract class WebviewBase implements Disposable {
 	// Reset the html to get the webview to reload
 	async resetPanel() {
 		const html = await this.getHtml();
+		this.resetOutlineProvider();
 
 		if (this._panel === undefined) {
 			return;
@@ -203,6 +205,10 @@ export abstract class WebviewBase implements Disposable {
 		this._panel.webview.html = '';
 		this._panel.webview.html = html;
 		this._panel.reveal(this._panel.viewColumn || ViewColumn.Active, false);
+	}
+
+	async resetOutlineProvider() {
+		provide.flowOutlineDataProvider.refresh();
 	}
 
 	private _html: string | undefined;

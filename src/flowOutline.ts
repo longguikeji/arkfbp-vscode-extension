@@ -37,21 +37,22 @@ export interface AstNode {
 
 export class AstModel {
   private sfile: ts.SourceFile = ts.createSourceFile('ast.ts', ``, ts.ScriptTarget.Latest);
+  public flowDirPath: string = '';
   constructor() { }
   private _getAst() {
     const editor = vscode.window.activeTextEditor;
     if (editor !== undefined) {
-      const flowDirPath = getArkFBPFlowDirByDocument(editor.document);
-      if (flowDirPath !== '') {
-        const content = fs.readFileSync(path.join(flowDirPath, getMainFileName())).toString();
-        this.sfile = ts.createSourceFile(
-          path.join(flowDirPath, getMainFileName()),
-          content,
-          ts.ScriptTarget.Latest
-        );
-      } else {
-        this.sfile = ts.createSourceFile('ast.ts', ``, ts.ScriptTarget.Latest);
-      }
+      this.flowDirPath = getArkFBPFlowDirByDocument(editor.document);
+    }
+    if (this.flowDirPath !== '') {
+      const content = fs.readFileSync(path.join(this.flowDirPath, getMainFileName())).toString();
+      this.sfile = ts.createSourceFile(
+        path.join(this.flowDirPath, getMainFileName()),
+        content,
+        ts.ScriptTarget.Latest
+      );
+    } else {
+      this.sfile = ts.createSourceFile('ast.ts', ``, ts.ScriptTarget.Latest);
     }
   }
 
@@ -169,7 +170,7 @@ export class AstModel {
             return p;
         }) || [];
     }
-      
+
     return flowNodes;
   }
 }
@@ -186,6 +187,10 @@ export class FlowOutlineProvider implements vscode.TreeDataProvider<AstNode> {
   }
   public refresh(): any {
     this._onDidChangeTreeData.fire();
+  }
+
+  public setFlowDirPath(flowPath: string) {
+    this.model.flowDirPath = path.dirname(flowPath);
   }
 
   public copy(p: string) {

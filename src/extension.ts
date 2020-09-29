@@ -172,6 +172,8 @@ export async function activate(context: ExtensionContext) {
 		vscode.commands.registerCommand('arkfbp.explorer.flow.action.openGraphDefinitionFile', async (flow: string) => {
 			const graphDefinitionFile = arkfbp.getFlowGraphDefinitionFileByReference(rootPath, flow);
 
+			flowOutlineDataProvider.setFlowDirPath(graphDefinitionFile);
+
 			await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
 			await vscode.commands.executeCommand('workbench.action.focusLastEditorGroup');
 
