@@ -236,21 +236,25 @@
         {
           "id": "arkfbp.explorer.dependency",
           "name": "dependency",
+          "when": "workbenchState != empty",
           "group": "navigation@2"
         },
         {
           "id": "arkfbp.explorer.database",
           "name": "database",
+          "when": "workbenchState != empty",
           "group": "navigation@3"
         },
         {
           "id": "arkfbp.explorer.flow",
           "name": "Flows",
+          "when": "workbenchState != empty",
           "group": "navigation@4"
         },
         {
           "id": "arkfbp.explorer.flowOutline",
           "name": "Outline",
+          "when": "workbenchState != empty",
           "group": "navigation@5"
         }
       ]
@@ -275,12 +279,12 @@
         },
         {
           "command": "arkfbp.explorer.info.action.build",
-          "when": "view == arkfbp.explorer.info",
+          "when": "view == arkfbp.explorer.info && workbenchState != empty",
           "group": "navigation@1"
         },
         {
           "command": "arkfbp.explorer.info.action.run",
-          "when": "view == arkfbp.explorer.info",
+          "when": "view == arkfbp.explorer.info  && workbenchState != empty",
           "group": "navigation@2"
         },
         {
@@ -390,7 +394,14 @@
           "icon": "resources/arkfbp-activitybar.svg"
         }
       ]
-    }
+    },
+    "viewsWelcome": [
+      {
+        "view": "arkfbp.explorer.info",
+        "contents": "打开一个现存的arkfbp项目\n[Open Folder](command:vscode.openFolder)\n或者\n创建一个新的项目\n[Create ArkFBP Repository](command:arkfbp.create)\n更多信息参考[read our docs](https://github.com/longguikeji/arkfbp).",
+        "when": "workbenchState == empty"
+      }
+    ]
   },
   "scripts": {
     "compile": "webpack --mode development",
@@ -415,14 +426,14 @@
     "@types/jsonschema": "^1.1.1",
     "@types/lodash": "^4.14.149",
     "@types/mocha": "^7.0.2",
-    "@types/node": "^12.11.7",
+    "@types/node": "^12.19.3",
     "@types/rimraf": "^3.0.0",
     "@types/vscode": "^1.37.0",
     "@types/webpack-env": "^1.15.1",
     "@typescript-eslint/eslint-plugin": "^2.18.0",
+    "@typescript-eslint/parser": "^2.18.0",
     "@vue/cli-plugin-eslint": "^4.1.0",
     "@vue/eslint-config-typescript": "^4.0.0",
-    "@typescript-eslint/parser": "^2.18.0",
     "circular-dependency-plugin": "^5.2.0",
     "clean-webpack-plugin": "^3.0.0",
     "csp-html-webpack-plugin": "^3.0.4",

@@ -82,7 +82,7 @@ export async function activate(context: ExtensionContext) {
 			}
 		})
 	);
-	context.subscriptions.push(
+	context.subscriptions.push( 
 		vscode.commands.registerCommand("arkfbp.explorer.info.action.run", () => {
 			if (terminal) {
 				appProvider.run(terminal);
