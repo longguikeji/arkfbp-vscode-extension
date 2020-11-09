@@ -17,11 +17,18 @@ import {
     stringify,
     assign
   } from 'comment-json';
+import BaseCmd from './cmd/BaseCmd';
 
 const ARKFBP_META_DIR = '.arkfbp';
 const ARKFBP_META_CONFIG_FILE = 'config.yml';
 const ARKFBP_FLOW_DIR = 'flows';
 const ARKFBP_DATBASE_DIR = 'databases';
+
+
+export function createApp(workspaceRoot: string, terminal?: vscode.Terminal) {
+    BaseCmd.instance.create(workspaceRoot,terminal);
+}
+
 
 export function getPackageJson(root: string): string {
     return path.join(root, ARKFBP_META_DIR, ARKFBP_META_CONFIG_FILE);

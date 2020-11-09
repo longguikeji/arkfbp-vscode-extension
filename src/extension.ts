@@ -42,6 +42,18 @@ let terminal: Terminal | null = null;
 
 
 export async function activate(context: ExtensionContext) {
+	
+	console.log('arkfbp.create??!!');
+	context.subscriptions.push(
+		vscode.commands.registerCommand("arkfbp.create", (foldPath:string) => {
+			console.log('arkfbp.create');
+			if (terminal) {
+				arkfbp.createApp(foldPath, terminal);
+			}
+		})
+	);
+
+
 	if (!terminal) {
 		terminal = window.createTerminal();
 	}
@@ -59,15 +71,20 @@ export async function activate(context: ExtensionContext) {
 
 	// Welcome Command
 	vscode.commands.registerCommand("arkfbp.welcome", () => {
+		console.log('arkfbp.welcome');
 		window.showInformationMessage('Welcome to use ArkFBP');
 	});
 
+	
+
 	vscode.commands.registerCommand("arkfbp.build", () => {
+		console.log('arkfbp.build');
 		if (terminal) {
 			arkfbp.buildApp(rootPath, terminal);
 		}
 	});
 
+	
 	const appProvider: AppProvider = new AppProvider(
 		context,
 		rootPath
