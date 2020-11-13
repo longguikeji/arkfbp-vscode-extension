@@ -21,5 +21,5 @@ export default abstract class BaseCmd {
     return BaseCmd._instance;
   }
 
-  abstract create(workspaceRoot: string, terminal?: vscode.Terminal);
+  abstract create(workspaceRoot: string, terminal?: vscode.Terminal):void;
 }

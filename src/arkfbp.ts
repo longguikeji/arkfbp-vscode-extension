@@ -36,9 +36,9 @@ export function getPackageJson(root: string): string {
 
 export function getLanguageType(): string {
     const packageJsonPath: string = getPackageJson(vscode.workspace.rootPath || '.');
-    const doc = yaml.safeLoad(fs.readFileSync(packageJsonPath, "utf-8").toString());
-    
-    return doc.language;
+    const doc:any = yaml.safeLoad(fs.readFileSync(packageJsonPath, "utf-8").toString());
+
+    return doc['language'];
 }
 
 export function getMainFileName(): string {

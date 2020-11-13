@@ -19,6 +19,6 @@ import {
       super(label, collapsibleState);
       this.dir = dir;
     }
-    iconPath = ThemeIcon.Folder;
+    // iconPath = ThemeIcon.Folder;
     contextValue = "flowFolder";
   }

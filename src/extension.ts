@@ -40,6 +40,7 @@ export function deactivate() {
 
 let terminal: Terminal | null = null;
 
+console.log('!!!!!!!!!');
 
 export async function activate(context: ExtensionContext) {
 	

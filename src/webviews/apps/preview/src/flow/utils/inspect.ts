@@ -65,13 +65,13 @@ export function inspectFlowCode(code: string) {
   const nodes = nodeArrayExpression.elements.map(s => {
     const properties = (s as t.ObjectExpression).properties as t.ObjectProperty[]
 
-    const clsProperty = properties.find(p => p.key.name === 'cls' && t.isIdentifier(p.value)) as t.ObjectProperty
-    const idProperty = properties.find(p => p.key.name === 'id' && t.isLiteral(p.value)) as t.ObjectProperty
-    const xProperty = properties.find(p => p.key.name === 'x' && t.isLiteral(p.value)) as t.ObjectProperty
-    const yProperty = properties.find(p => p.key.name === 'y' && t.isLiteral(p.value)) as t.ObjectProperty
-    const positiveNextProperty = properties.find(p => p.key.name === 'positiveNext' && t.isLiteral(p.value)) as t.ObjectProperty
-    const negativeNextProperty = properties.find(p => p.key.name === 'negativeNext' && t.isLiteral(p.value)) as t.ObjectProperty
-    const nextProperty = properties.find(p => p.key.name === 'next' && (t.isArrayExpression(p.value) || t.isLiteral(p.value))) as t.ObjectProperty
+    const clsProperty = properties.find(p => (p.key as any)['name'] === 'cls' && t.isIdentifier(p.value)) as t.ObjectProperty
+    const idProperty = properties.find(p => (p.key as any)['name'] === 'id' && t.isLiteral(p.value)) as t.ObjectProperty
+    const xProperty = properties.find(p => (p.key as any)['name'] === 'x' && t.isLiteral(p.value)) as t.ObjectProperty
+    const yProperty = properties.find(p => (p.key as any)['name'] === 'y' && t.isLiteral(p.value)) as t.ObjectProperty
+    const positiveNextProperty = properties.find(p => (p.key as any)['name'] === 'positiveNext' && t.isLiteral(p.value)) as t.ObjectProperty
+    const negativeNextProperty = properties.find(p => (p.key as any)['name'] === 'negativeNext' && t.isLiteral(p.value)) as t.ObjectProperty
+    const nextProperty = properties.find(p => (p.key as any)['name'] === 'next' && (t.isArrayExpression(p.value) || t.isLiteral(p.value))) as t.ObjectProperty
 
     const cls = (clsProperty!.value as t.Identifier).name as string
     const id = (idProperty!.value as t.Identifier).name as string
@@ -179,7 +179,7 @@ function getValueFromExpression(e: t.Expression|null): any {
     return e.properties.reduce((memo: any, p) => {
       if (t.isObjectProperty(p)) {
         if (t.isExpression(p.value)) {
-          const key = p.key.name || p.key.value
+          const key = (p.key as any)['name'] || (p.key as any)['value']
           memo[key] = getValueFromExpression(p.value)
         }
       }

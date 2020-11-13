@@ -145,7 +145,7 @@ import {
       const treeItems: FlowTreeItem[] = [];
       // const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
 
-      const doc = yaml.safeLoad(fs.readFileSync(packageJsonPath, "utf-8").toString());
+      const doc:any = yaml.safeLoad(fs.readFileSync(packageJsonPath, "utf-8").toString());
       const workspaceDir: string = path.dirname(packageJsonPath);
       const toScript = (
         scriptName: string,

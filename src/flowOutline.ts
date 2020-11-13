@@ -176,8 +176,8 @@ export class AstModel {
 }
 
 export class FlowOutlineProvider implements vscode.TreeDataProvider<AstNode> {
-  private _onDidChangeTreeData: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
-  readonly onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
+  private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+  readonly onDidChangeTreeData: vscode.Event<void> = this._onDidChangeTreeData.event;
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly model: AstModel = new AstModel()

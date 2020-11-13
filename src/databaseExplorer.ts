@@ -28,7 +28,7 @@ class DatabaseTreeItem extends TreeItem {
     super(`[${database.name}]`, collapsibleState);
   }
 
-  iconPath = ThemeIcon.Folder;
+  // iconPath = ThemeIcon.Folder;
   contextValue = "database";
 
 }
@@ -43,7 +43,7 @@ class TableTreeItem extends TreeItem {
     super(table.name, collapsibleState);
   }
 
-  iconPath = ThemeIcon.Folder;
+  // iconPath = ThemeIcon.Folder;
   contextValue = "table";
 
 }
@@ -59,7 +59,7 @@ class ColumnTreeItem extends TreeItem {
     super(column.name, collapsibleState);
   }
 
-  iconPath = ThemeIcon.Folder;
+  // iconPath = ThemeIcon.Folder;
   contextValue = "column";
 }
 
@@ -74,7 +74,7 @@ class SnapshotTreeItem extends TreeItem {
     super(snapshot.version, collapsibleState);
   }
 
-  iconPath = ThemeIcon.Folder;
+  // iconPath = ThemeIcon.Folder;
   contextValue = "snapshot";
 }
 
@@ -99,7 +99,7 @@ export class DatabaseProvider
   }
 
   refresh(): void {
-    this._onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire(undefined);
   }
 
   getTreeItem(element: FlowTreeItem | FlowDirTreeItem): TreeItem {
@@ -131,7 +131,7 @@ export class DatabaseProvider
         database,
         TreeItemCollapsibleState.Expanded,
       );
-
+      
       item.iconPath = {
         light: path.join(
           this.context.extensionPath,
